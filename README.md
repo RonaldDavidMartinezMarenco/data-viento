@@ -40,3 +40,16 @@ Provide interactive tools and recommendations to improve user resilience.
 We welcome contributions to this project! Please read our contribution guidelines for more information.
 
 This document is a work in progress and will be updated as the project evolves.
+
+## How to start
+CREATE DATABASE data_viento_database;
+Copy and paste the schema.txt that is on apps/server/src/db/schema.txt
+mysql -u 'your_user_name' -p 
+Put the data of your connection id a .env on server/
+DB_HOST=localhost
+DB_USER=your_user_name
+DB_PASSWORD=your_pass
+DB_NAME=data_viento_database
+DB_PORT=3306
+DEBUG=True
+API_TIMEOUT=10
