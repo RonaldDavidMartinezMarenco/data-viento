@@ -1,0 +1,40 @@
+"""
+Constants module for data-viento
+Contains all configuration constants for API parameters, models, and data types
+"""
+
+from .open_meteo_params import (
+    WEATHER_CURRENT_PARAMS,
+    WEATHER_HOURLY_PARAMS,
+    WEATHER_DAILY_PARAMS,
+    AIR_QUALITY_CURRENT_PARAMS,
+    AIR_QUALITY_HOURLY_PARAMS,
+    MARINE_CURRENT_PARAMS,
+    MARINE_HOURLY_PARAMS,
+    MARINE_DAILY_PARAMS,
+    SATELLITE_RADIATION_PARAMS,
+    CLIMATE_DAILY_PARAMS,
+    EXTRACTION_FREQUENCIES,
+    WEATHER_MODELS_DATA,
+    WEATHER_PARAMETERS_DATA,
+    get_api_params,
+    get_extraction_frequency,
+)
+
+__all__ = [
+    "WEATHER_CURRENT_PARAMS",
+    "WEATHER_HOURLY_PARAMS",
+    "WEATHER_DAILY_PARAMS",
+    "AIR_QUALITY_CURRENT_PARAMS",
+    "AIR_QUALITY_HOURLY_PARAMS",
+    "MARINE_CURRENT_PARAMS",
+    "MARINE_HOURLY_PARAMS",
+    "MARINE_DAILY_PARAMS",
+    "SATELLITE_RADIATION_PARAMS",
+    "CLIMATE_DAILY_PARAMS",
+    "EXTRACTION_FREQUENCIES",
+    "WEATHER_MODELS_DATA",
+    "WEATHER_PARAMETERS_DATA",
+    "get_api_params",
+    "get_extraction_frequency",
+]
