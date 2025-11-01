@@ -17,13 +17,14 @@ Why this matters:
 
 # ==================== WEATHER FORECAST PARAMETERS ====================
 
-WEATHER_CURRENT_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo forecast current endpoint
     These are the exact strings to send to the API
     
     Maps to: current_weather table
-    """
+"""
+WEATHER_CURRENT_PARAMS = {
+    
     "api_params": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m",
     
     "db_mapping": {
@@ -38,13 +39,13 @@ WEATHER_CURRENT_PARAMS = {
         "wind_direction_10m": "wind_direction_10m",
     }
 }
-
-WEATHER_HOURLY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo forecast hourly endpoint
     
     Maps to: weather_forecasts + forecast_data tables
-    """
+"""
+WEATHER_HOURLY_PARAMS = {
+   
     "api_params": "temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m",
     
     "db_mapping": {
@@ -58,12 +59,12 @@ WEATHER_HOURLY_PARAMS = {
     }
 }
 
-WEATHER_DAILY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo forecast daily endpoint
     
     Maps to: weather_forecasts_daily table
-    """
+"""
+WEATHER_DAILY_PARAMS = {
     "api_params": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset,sunshine_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant",
     
     "db_mapping": {
@@ -83,13 +84,12 @@ WEATHER_DAILY_PARAMS = {
 }
 
 # ==================== AIR QUALITY PARAMETERS ====================
-
-AIR_QUALITY_CURRENT_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo air-quality current endpoint
     
     Maps to: air_quality_current table
-    """
+"""
+AIR_QUALITY_CURRENT_PARAMS = {
     "api_params": "pm2_5,pm10,european_aqi,us_aqi,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide,dust,ammonia",
     
     "db_mapping": {
@@ -105,13 +105,12 @@ AIR_QUALITY_CURRENT_PARAMS = {
         "ammonia": "ammonia",
     }
 }
-
-AIR_QUALITY_HOURLY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo air-quality hourly endpoint
     
     Maps to: air_quality_forecasts + air_quality_data tables
-    """
+"""
+AIR_QUALITY_HOURLY_PARAMS = {
     "api_params": "aqi,pm2_5,pm10,european_aqi,us_aqi,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide",
     
     "db_mapping": {
@@ -129,12 +128,12 @@ AIR_QUALITY_HOURLY_PARAMS = {
 
 # ==================== MARINE PARAMETERS ====================
 
-MARINE_CURRENT_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo marine current endpoint
     
     Maps to: marine_current table
-    """
+"""
+MARINE_CURRENT_PARAMS = {
     "api_params": "wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction",
     
     "db_mapping": {
@@ -150,13 +149,12 @@ MARINE_CURRENT_PARAMS = {
         "ocean_current_direction": "ocean_current_direction",
     }
 }
-
-MARINE_HOURLY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo marine hourly endpoint
     
     Maps to: marine_forecasts + marine_data tables
-    """
+"""
+MARINE_HOURLY_PARAMS = {
     "api_params": "wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_surface_temperature",
     
     "db_mapping": {
@@ -171,12 +169,12 @@ MARINE_HOURLY_PARAMS = {
     }
 }
 
-MARINE_DAILY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo marine daily endpoint
     
     Maps to: marine_forecasts_daily table
-    """
+"""
+MARINE_DAILY_PARAMS = {
     "api_params": "wave_height_max,wave_direction_dominant,wave_period_max,swell_wave_height_max,swell_wave_direction_dominant,sea_surface_temperature_mean,ocean_current_velocity_max",
     
     "db_mapping": {
@@ -192,14 +190,14 @@ MARINE_DAILY_PARAMS = {
 
 # ==================== SATELLITE RADIATION PARAMETERS ====================
 
-SATELLITE_RADIATION_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo solar endpoint (also called 'solar' not 'satellite')
     
     Maps to: satellite_radiation_data table
     
     Note: This endpoint has 10-30 minute granularity (not hourly)
-    """
+"""
+SATELLITE_RADIATION_PARAMS = {
     "api_params": "shortwave_radiation,direct_radiation,diffuse_radiation,direct_normal_irradiance,global_tilted_irradiance,terrestrial_radiation",
     
     "db_mapping": {
@@ -218,15 +216,14 @@ SATELLITE_RADIATION_PARAMS = {
 }
 
 # ==================== CLIMATE PROJECTIONS PARAMETERS ====================
-
-CLIMATE_DAILY_PARAMS = {
-    """
+"""
     Parameters for Open-Meteo climate?daily endpoint
     
     Maps to: climate_projections + climate_daily tables
     
     Note: Climate endpoint requires start_date and end_date parameters
-    """
+"""
+CLIMATE_DAILY_PARAMS = {
     "api_params": "temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,rain_sum,snowfall_sum,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean,wind_speed_10m_mean,wind_speed_10m_max,pressure_msl_mean,cloud_cover_mean,shortwave_radiation_sum,soil_moisture_0_to_10cm_mean",
     
     "db_mapping": {
