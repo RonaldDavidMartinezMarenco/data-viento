@@ -74,6 +74,7 @@ class DailyWeatherData(BaseModel):
     temperature_2m_min: Optional[List[Optional[float]]] = Field(None, description="Daily min temperature (°C)")
     precipitation_sum: Optional[List[Optional[float]]] = Field(None, description="Daily precipitation total (mm)")
     precipitation_probability_max: Optional[List[Optional[int]]] = Field(None, description="Max precipitation probability (0-100%)")
+    precipitation_hours: Optional[List[Optional[int]]] = Field(None, description="Max precipitation hours")
     weather_code: Optional[List[Optional[int]]] = Field(None, description="Daily dominant weather code")
     sunrise: Optional[List[Optional[str]]] = Field(None, description="Sunrise time (HH:MM)")
     sunset: Optional[List[Optional[str]]] = Field(None, description="Sunset time (HH:MM)")

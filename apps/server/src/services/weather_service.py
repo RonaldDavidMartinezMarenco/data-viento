@@ -90,7 +90,7 @@ class WeatherService (BaseService):
         include_current: bool = True,
         include_hourly: bool = False,
         include_daily: bool = True,
-        forecast_days: int = 7,
+        forecast_days: int = 5,
         **location_kwargs
     ) -> Dict[str, Any]:
         """
@@ -297,14 +297,30 @@ class WeatherService (BaseService):
         INSERT INTO weather_forecasts_daily (
             location_id, model_id, valid_date,
             temperature_2m_max, temperature_2m_min,
-            precipitation_sum, precipitation_probability_max,
+            precipitation_sum, precipitation_hours, precipitation_probability_max,
             weather_code, sunrise, sunset, sunshine_duration,
             uv_index_max, wind_speed_10m_max, wind_gusts_10m_max,
             wind_direction_10m_dominant, forecast_reference_time,
-            created_at
+            created_at, updated_at
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), NOW()
         )
+        ON DUPLICATE KEY UPDATE 
+            temperature_2m_max = VALUES(temperature_2m_max),
+            temperature_2m_min = VALUES(temperature_2m_min),
+            precipitation_sum = VALUES(precipitation_sum),
+            precipitation_hours = VALUES(precipitation_hours),
+            precipitation_probability_max = VALUES(precipitation_probability_max),
+            weather_code = VALUES(weather_code),
+            sunrise = VALUES(sunrise),
+            sunset = VALUES(sunset),
+            sunshine_duration = VALUES(sunshine_duration),
+            uv_index_max = VALUES(uv_index_max),
+            wind_speed_10m_max = VALUES(wind_speed_10m_max),
+            wind_gusts_10m_max = VALUES(wind_gusts_10m_max),
+            wind_direction_10m_dominant = VALUES(wind_direction_10m_dominant),
+            forecast_reference_time = NOW(),   
+            updated_at = NOW()
         """
         
         # Prepare bulk data
@@ -317,6 +333,7 @@ class WeatherService (BaseService):
                 daily_data.temperature_2m_max[i] if daily_data.temperature_2m_max else None,
                 daily_data.temperature_2m_min[i] if daily_data.temperature_2m_min else None,
                 daily_data.precipitation_sum[i] if daily_data.precipitation_sum else None,
+                daily_data.precipitation_hours[i] if daily_data.precipitation_hours else None,
                 daily_data.precipitation_probability_max[i] if daily_data.precipitation_probability_max else None,
                 daily_data.weather_code[i] if daily_data.weather_code else None,
                 daily_data.sunrise[i] if daily_data.sunrise else None,
@@ -595,24 +612,134 @@ class WeatherService (BaseService):
         
         return rows_inserted
     
+    def cleanup_old_forecasts(self, days_to_keep: int = 5) -> int:
+        """
+        Delete old forecast batches and their data
+        
+        Args:
+            days_to_keep: Number of days to keep (default: 7)
+        
+        Returns:
+            Number of forecast batches deleted
+        
+        Explanation:
+        - Deletes forecast batches older than X days
+        - Cascade deletes forecast_data rows (if FK constraint set)
+        - Keeps database size manageable
+        - Run this daily via cron job
+        
+        Example:
+            >>> service = WeatherService()
+            >>> deleted = service.cleanup_old_forecasts(days_to_keep=7)
+            >>> print(f"Deleted {deleted} old forecast batches")
+        """
+    
+        try:
+            # Step 1: Find old forecast IDs
+            select_query = """
+            SELECT forecast_id, location_id, forecast_reference_time
+            FROM weather_forecasts
+            WHERE forecast_reference_time < DATE_SUB(NOW(), INTERVAL %s DAY)
+            """
+            
+            old_forecasts = self.db.execute_query(select_query, (days_to_keep,))
+            
+            if not old_forecasts:
+                self.logger.info(f"No forecasts older than {days_to_keep} days to delete")
+                return 0
+            
+            forecast_ids = [row[0] for row in old_forecasts]
+            
+            # Step 2: Delete forecast_data rows (if no CASCADE)
+            if forecast_ids:
+                placeholders = ','.join(['%s'] * len(forecast_ids))
+                delete_data_query = f"""
+                DELETE FROM forecast_data
+                WHERE forecast_id IN ({placeholders})
+                """
+                
+                self.db.execute_query(delete_data_query, forecast_ids)
+                self.logger.info(f"✓ Deleted forecast_data for {len(forecast_ids)} batches")
+            
+            # Step 3: Delete forecast batches
+            delete_forecast_query = f"""
+            DELETE FROM weather_forecasts
+            WHERE forecast_id IN ({placeholders})
+            """
+            
+            self.db.execute_query(delete_forecast_query, forecast_ids)
+            
+            self.logger.info(
+                f"✓ Deleted {len(forecast_ids)} forecast batches older than {days_to_keep} days"
+            )
+            
+            return len(forecast_ids)
+        
+        except Exception as e:
+            self._log_db_error("cleanup_old_forecasts", e)
+            return 0
+
+
+    def cleanup_old_forecast_data_points(self, hours_to_keep: int = 168) -> int:
+        """
+        Delete individual forecast data points older than X hours
+        
+        Args:
+            hours_to_keep: Number of hours to keep (default: 168 = 7 days)
+        
+        Returns:
+            Number of data points deleted
+        
+        Explanation:
+        - More granular than cleanup_old_forecasts
+        - Deletes only old valid_time data points
+        - Useful if you want to keep forecast batches but not old data
+        
+        Example:
+            >>> service = WeatherService()
+            >>> deleted = service.cleanup_old_forecast_data_points(hours_to_keep=168)
+            >>> print(f"Deleted {deleted} old data points")
+        """
+        
+        try:
+            delete_query = """
+            DELETE FROM forecast_data
+            WHERE valid_time < DATE_SUB(NOW(), INTERVAL %s HOUR)
+            """
+            
+            # Execute with affected rows count
+            cursor = self.db.connection.cursor()
+            cursor.execute(delete_query, (hours_to_keep,))
+            deleted_count = cursor.rowcount
+            self.db.connection.commit()
+            cursor.close()
+            
+            self.logger.info(f"✓ Deleted {deleted_count} forecast data points older than {hours_to_keep} hours")
+            
+            return deleted_count
+        
+        except Exception as e:
+            self._log_db_error("cleanup_old_forecast_data_points", e)
+            return 0
+        
     def initialize_weather_models(self) -> bool:
         """
         Initialize weather_models table with Open-Meteo models
-        
+            
         This should be run ONCE when setting up the database.
         Inserts all models from WEATHER_MODELS_DATA constant.
-        
+            
         Returns:
             True if successful
-        
+            
         Explanation:
         - Populates weather_models table
         - Uses INSERT IGNORE to avoid duplicates
         - Should be called during database setup
         """
-        
+            
         from src.constants.open_meteo_params import WEATHER_MODELS_DATA
-        
+            
         query = """
         INSERT IGNORE INTO weather_models (
             model_code, model_name, provider, provider_country,
@@ -623,8 +750,8 @@ class WeatherService (BaseService):
         ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW()
         )
-        """
-        
+            """
+            
         rows = []
         for model in WEATHER_MODELS_DATA:
             row = (
@@ -643,7 +770,7 @@ class WeatherService (BaseService):
                 model['description'],
             )
             rows.append(row)
-        
+            
         try:
             rows_inserted = self.db.execute_bulk_insert(query, rows)
             self.logger.info(f"✓ Initialized {rows_inserted} weather models")

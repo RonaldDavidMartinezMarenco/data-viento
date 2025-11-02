@@ -65,12 +65,13 @@ WEATHER_HOURLY_PARAMS = {
     Maps to: weather_forecasts_daily table
 """
 WEATHER_DAILY_PARAMS = {
-    "api_params": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset,sunshine_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant",
+    "api_params": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,weather_code,sunrise,sunset,sunshine_duration,uv_index_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant",
     
     "db_mapping": {
         "temperature_2m_max": "temperature_2m_max",
         "temperature_2m_min": "temperature_2m_min",
         "precipitation_sum": "precipitation_sum",
+        "precipitation_hours": "precipitation_hours",
         "precipitation_probability_max": "precipitation_probability_max",
         "weather_code": "weather_code",
         "sunrise": "sunrise",

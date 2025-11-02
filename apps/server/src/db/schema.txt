@@ -76,8 +76,6 @@ CREATE TABLE location_names (
     is_feature_name BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
-
-
 -- Model Tables
 
 CREATE TABLE weather_models (
@@ -195,6 +193,7 @@ CREATE TABLE weather_forecasts_daily (
     wind_direction_10m_dominant INTEGER,
     forecast_reference_time TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_location_model_date (location_id, model_id, valid_date),
     FOREIGN KEY (location_id) REFERENCES locations(location_id),
     FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
