@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from models.base_models import APIMetadata
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from src.models.base_models import APIMetadata
 
 # ==================== CURRENT WEATHER ====================
 
@@ -73,8 +77,8 @@ class DailyWeatherData(BaseModel):
     weather_code: Optional[List[Optional[int]]] = Field(None, description="Daily dominant weather code")
     sunrise: Optional[List[Optional[str]]] = Field(None, description="Sunrise time (HH:MM)")
     sunset: Optional[List[Optional[str]]] = Field(None, description="Sunset time (HH:MM)")
-    sunshine_duration: Optional[List[Optional[int]]] = Field(None, description="Hours of sunshine")
-    uv_index_max: Optional[List[Optional[int]]] = Field(None, description="Maximum UV index")
+    sunshine_duration: Optional[List[Optional[float]]] = Field(None, description="Hours of sunshine")
+    uv_index_max: Optional[List[Optional[float]]] = Field(None, description="Maximum UV index")
     wind_speed_10m_max: Optional[List[Optional[float]]] = Field(None, description="Max wind speed (km/h)")
     wind_gusts_10m_max: Optional[List[Optional[float]]] = Field(None, description="Max wind gusts (km/h)")
     wind_direction_10m_dominant: Optional[List[Optional[int]]] = Field(None, description="Dominant wind direction (0-360°)")

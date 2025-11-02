@@ -259,7 +259,7 @@ Explanation:
 """
 
 EXTRACTION_FREQUENCIES = {
-    "current_weather": 15,           # Every 30 minutes
+    "current_weather": 15,           # Every 15 minutes
     "weather_hourly": 180,           # Every 3 hours
     "weather_daily": 1440,           # Every 24 hours (once per day)
     "air_quality_current": 720,      # Every 12 hours
@@ -459,12 +459,12 @@ WEATHER_PARAMETERS_DATA = [
     ("ocean_current_dir", "Ocean Current Direction", "°", "marine", "int", "surface", True, "marine"),
     
     # Satellite Radiation Parameters
-    ("shortwave_rad", "Shortwave Radiation", "W/m²", "solar", "float", "surface", True, "satellite"),
-    ("direct_rad", "Direct Radiation", "W/m²", "solar", "float", "surface", True, "satellite"),
-    ("diffuse_rad", "Diffuse Radiation", "W/m²", "solar", "float", "surface", True, "satellite"),
-    ("dni", "Direct Normal Irradiance (DNI)", "W/m²", "solar", "float", "surface", True, "satellite"),
-    ("gti", "Global Tilted Irradiance (GTI)", "W/m²", "solar", "float", "surface", True, "satellite"),
-    ("terrestrial_rad", "Terrestrial Radiation", "W/m²", "solar", "float", "surface", True, "satellite"),
+    ("shortwave_rad", "Shortwave Radiation", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
+    ("direct_rad", "Direct Radiation", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
+    ("diffuse_rad", "Diffuse Radiation", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
+    ("dni", "Direct Normal Irradiance (DNI)", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
+    ("gti", "Global Tilted Irradiance (GTI)", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
+    ("terrestrial_rad", "Terrestrial Radiation", "W/m²", "solar", "float", "surface", True, "satellite_radiation"),
     
     # Climate Parameters
     ("precip_rain_sum", "Rain Sum", "mm", "precipitation", "float", "surface", True, "climate"),

@@ -1,6 +1,10 @@
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from models.base_models import APIMetadata
+from src.models.base_models import APIMetadata
 
 # ==================== SATELLITE RADIATION ====================
 
