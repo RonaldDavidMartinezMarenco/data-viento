@@ -112,10 +112,9 @@ AIR_QUALITY_CURRENT_PARAMS = {
     Maps to: air_quality_forecasts + air_quality_data tables
 """
 AIR_QUALITY_HOURLY_PARAMS = {
-    "api_params": "aqi,pm2_5,pm10,european_aqi,us_aqi,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide",
+    "api_params": "pm2_5,pm10,european_aqi,us_aqi,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide",
     
     "db_mapping": {
-        "aqi": "value",
         "pm2_5": "value",
         "pm10": "value",
         "european_aqi": "value",

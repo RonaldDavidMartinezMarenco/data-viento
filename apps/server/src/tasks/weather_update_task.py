@@ -284,7 +284,5 @@ def main():
     result = task.run()
     
     sys.exit(0 if result['success'] else 1)
-
-
 if __name__ == "__main__":
     main()
