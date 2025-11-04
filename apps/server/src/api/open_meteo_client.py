@@ -327,7 +327,7 @@ class OpenMeteoClient(BaseAPIClient):
         longitude: float,
         start_date: str,
         end_date: str,
-        models: str = "CMCC_CM2_VR4",
+        models: str = "EC_Earth3P_HR",
         timezone: str = "auto",
     ) -> Optional[Dict[str, Any]]:
         """

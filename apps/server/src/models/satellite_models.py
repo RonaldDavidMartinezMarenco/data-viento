@@ -8,7 +8,7 @@ from src.models.base_models import APIMetadata
 
 # ==================== SATELLITE RADIATION ====================
 
-class SatelliteRadiationHourly(BaseModel):
+class SatelliteRadiation(BaseModel):
     """
     Hourly satellite radiation data from Open-Meteo
     
@@ -26,12 +26,12 @@ class SatelliteRadiationHourly(BaseModel):
     - terrestrial_radiation: Heat radiation from Earth surface (W/m²)
     """
     time: List[str] = Field(..., description="List of timestamps (can be 10-30 minute intervals)")
-    shortwave_radiation: Optional[List[Optional[float]]] = Field(None, ge=0, description="Shortwave radiation (W/m²)")
-    direct_radiation: Optional[List[Optional[float]]] = Field(None, ge=0, description="Direct radiation (W/m²)")
-    diffuse_radiation: Optional[List[Optional[float]]] = Field(None, ge=0, description="Diffuse radiation (W/m²)")
-    direct_normal_irradiance: Optional[List[Optional[float]]] = Field(None, ge=0, description="Direct Normal Irradiance - DNI (W/m²)")
-    global_tilted_irradiance: Optional[List[Optional[float]]] = Field(None, ge=0, description="Global Tilted Irradiance - GTI (W/m²)")
-    terrestrial_radiation: Optional[List[Optional[float]]] = Field(None, ge=0, description="Terrestrial radiation (W/m²)")
+    shortwave_radiation: Optional[List[Optional[float]]] = Field(None, description="Shortwave radiation (W/m²)")
+    direct_radiation: Optional[List[Optional[float]]] = Field(None, description="Direct radiation (W/m²)")
+    diffuse_radiation: Optional[List[Optional[float]]] = Field(None, description="Diffuse radiation (W/m²)")
+    direct_normal_irradiance: Optional[List[Optional[float]]] = Field(None, description="Direct Normal Irradiance - DNI (W/m²)")
+    global_tilted_irradiance: Optional[List[Optional[float]]] = Field(None, description="Global Tilted Irradiance - GTI (W/m²)")
+    terrestrial_radiation: Optional[List[Optional[float]]] = Field(None, description="Terrestrial radiation (W/m²)")
 
 
 class SatelliteResponse(APIMetadata):
@@ -42,4 +42,4 @@ class SatelliteResponse(APIMetadata):
     
     Note: This endpoint only returns hourly data (no current or daily aggregates)
     """
-    hourly: Optional[SatelliteRadiationHourly] = Field(None, description="Hourly solar radiation data")
+    hourly: Optional[SatelliteRadiation] = Field(None, description="solar radiation data")

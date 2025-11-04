@@ -50,8 +50,8 @@ cat > /tmp/data-viento-cron << 'EOF'
 # Marine: Every 6 hours (EXTRACTION_FREQUENCIES['marine_current'])
 # 0 */6 * * * cd $SERVER_DIR && python3 -m src.tasks.marine_update_task >> $SERVER_DIR/logs/marine/update.log 2>&1
 
-# Satellite Radiation: Every 30 minutes (EXTRACTION_FREQUENCIES['satellite_radiation'])
-# */30 * * * * cd $SERVER_DIR && python3 -m src.tasks.satellite_update_task >> $SERVER_DIR/logs/satellite/update.log 2>&1
+# Satellite Radiation: Every day (EXTRACTION_FREQUENCIES['satellite_radiation'])
+# 0 6 * * * * cd $SERVER_DIR && python3 -m src.tasks.satellite_update_task >> $SERVER_DIR/logs/satellite/update.log 2>&1
 
 EOF
 

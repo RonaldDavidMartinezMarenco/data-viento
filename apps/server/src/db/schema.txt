@@ -273,7 +273,6 @@ CREATE TABLE marine_forecasts (
     location_id INT NOT NULL,
     model_id INT NOT NULL,
     forecast_reference_time TIMESTAMP NOT NULL,
-    data_resolution ENUM('hourly','3hourly','daily'),
     generation_time_ms DECIMAL(8,3),
     timezone VARCHAR(50),
     utc_offset_seconds INTEGER,
@@ -307,8 +306,7 @@ CREATE TABLE marine_forecasts_daily (
     wave_period_max DECIMAL(6,2),
     swell_wave_height_max DECIMAL(6,2),
     swell_wave_direction_dominant INTEGER,
-    sea_surface_temperature_mean DECIMAL(6,2),
-    ocean_current_velocity_max DECIMAL(6,2),
+    wind_wave_height_max DECIMAL(6,2),
     forecast_reference_time TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_location_model_date (location_id, model_id, valid_date),
@@ -317,11 +315,11 @@ CREATE TABLE marine_forecasts_daily (
 );
 
 -- Satellite Radiation
-CREATE TABLE satellite_radiation_data (
+CREATE TABLE satellite_radiation_daily (
     radiation_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
-    observation_time TIMESTAMP NOT NULL,
-    satellite_provider VARCHAR(50),
+    model_id INT NOT NULL,
+    valid_date TIMESTAMP NOT NULL,
     shortwave_radiation DECIMAL(8,2),
     direct_radiation DECIMAL(8,2),
     diffuse_radiation DECIMAL(8,2),
@@ -332,7 +330,9 @@ CREATE TABLE satellite_radiation_data (
     panel_azimuth_angle INTEGER,
     quality_flag ENUM('good','fair','poor') DEFAULT 'good',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (location_id) REFERENCES locations(location_id)
+    UNIQUE KEY unique_location_model_date (location_id, model_id, valid_date),
+    FOREIGN KEY (location_id) REFERENCES locations(location_id),
+    FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
 );
 
 

@@ -22,7 +22,7 @@ from .marine_models import (
     MarineResponse,
 )
 from .satellite_models import (
-    SatelliteRadiationHourly,
+    SatelliteRadiation,
     SatelliteResponse,
 )
 from .climate_models import (

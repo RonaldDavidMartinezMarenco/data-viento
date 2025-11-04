@@ -130,6 +130,7 @@ dependencies = [
     { name = "mysql-connector-python" },
     { name = "python-dotenv" },
     { name = "requests" },
+    { name = "statistics" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -140,7 +141,17 @@ requires-dist = [
     { name = "mysql-connector-python", specifier = ">=9.5.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "requests", specifier = ">=2.32.5" },
+    { name = "statistics", specifier = ">=1.0.3.5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.36.0" },
+]
+
+[[package]]
+name = "docutils"
+version = "0.22.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4a/c0/89fe6215b443b919cb98a5002e107cb5026854ed1ccb6b5833e0768419d1/docutils-0.22.2.tar.gz", hash = "sha256:9fdb771707c8784c8f2728b67cb2c691305933d68137ef95a75db5f4dfbc213d", size = 2289092 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/66/dd/f95350e853a4468ec37478414fc04ae2d61dad7a947b3015c3dcc51a09b9/docutils-0.22.2-py3-none-any.whl", hash = "sha256:b0e98d679283fc3bb0ead8a5da7f501baa632654e7056e9c5846842213d674d8", size = 632667 },
 ]
 
 [[package]]
@@ -476,6 +487,15 @@ sdist = { url = "https://files.pythonhosted.org/packages/a7/a5/d6f429d43394057b6
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/72/2db2f49247d0a18b4f1bb9a5a39a0162869acf235f3a96418363947b3d46/starlette-0.48.0-py3-none-any.whl", hash = "sha256:0764ca97b097582558ecb498132ed0c7d942f233f365b86ba37770e026510659", size = 73736 },
 ]
+
+[[package]]
+name = "statistics"
+version = "1.0.3.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docutils" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bb/3a/ae99a15e65636559d936dd2159d75af1619491e8cb770859fbc8aa62cef6/statistics-1.0.3.5.tar.gz", hash = "sha256:2dc379b80b07bf2ddd5488cad06b2b9531da4dd31edb04dc9ec0dc226486c138", size = 8303 }
 
 [[package]]
 name = "typing-extensions"

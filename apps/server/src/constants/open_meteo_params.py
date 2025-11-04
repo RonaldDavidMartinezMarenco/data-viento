@@ -175,7 +175,7 @@ MARINE_HOURLY_PARAMS = {
     Maps to: marine_forecasts_daily table
 """
 MARINE_DAILY_PARAMS = {
-    "api_params": "wave_height_max,wave_direction_dominant,wave_period_max,swell_wave_height_max,swell_wave_direction_dominant,sea_surface_temperature_mean,ocean_current_velocity_max",
+    "api_params": "wave_height_max,wave_direction_dominant,wave_period_max,swell_wave_height_max,swell_wave_direction_dominant,wind_wave_height_max",
     
     "db_mapping": {
         "wave_height_max": "wave_height_max",
@@ -183,8 +183,7 @@ MARINE_DAILY_PARAMS = {
         "wave_period_max": "wave_period_max",
         "swell_wave_height_max": "swell_wave_height_max",
         "swell_wave_direction_dominant": "swell_wave_direction_dominant",
-        "sea_surface_temperature_mean": "sea_surface_temperature_mean",
-        "ocean_current_velocity_max": "ocean_current_velocity_max",
+        "wind_wave_height_max": "wind_wave_height_max",
     }
 }
 
@@ -210,7 +209,7 @@ SATELLITE_RADIATION_PARAMS = {
     },
     
     "panel_defaults": {
-        "panel_tilt_angle": 35,        # Degrees from horizontal (0-90)
+        "panel_tilt_angle": 0,        # Degrees from horizontal (0-90)
         "panel_azimuth_angle": 0,      # Degrees from north (0-360, 0=North, 90=East, 180=South, 270=West)
     }
 }

@@ -64,8 +64,7 @@ class MarineDaily(BaseModel):
     wave_period_max: Optional[List[Optional[float]]] = Field(None, description="Max wave period (s)")
     swell_wave_height_max: Optional[List[Optional[float]]] = Field(None, description="Max swell height (m)")
     swell_wave_direction_dominant: Optional[List[Optional[int]]] = Field(None, description="Dominant swell direction (0-360°)")
-    sea_surface_temperature_mean: Optional[List[Optional[float]]] = Field(None, description="Mean water temp (°C)")
-    ocean_current_velocity_max: Optional[List[Optional[float]]] = Field(None, description="Max current speed (m/s)")
+    wind_wave_height_max: Optional[List[Optional[float]]] = Field(None, description="wind wave height max (m)")
 
 
 class MarineResponse(APIMetadata):
