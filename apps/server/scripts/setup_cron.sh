@@ -1,78 +1,303 @@
 #!/bin/bash
-
-# Setup cron jobs for automated tasks
-# Uses extraction frequencies from src/constants/open_meteo_params.py
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SERVER_DIR="$(dirname "$SCRIPT_DIR")"
-
-echo "Setting up cron jobs based on EXTRACTION_FREQUENCIES..."
-echo "Server directory: $SERVER_DIR"
-
-# Create crontab entries
-cat > /tmp/data-viento-cron << 'EOF'
-# ============================================================================
-# Data-Viento Automated Tasks
+#
+# Master CRON Setup Script
+# Sets up all cron jobs for Data-Viento project
+#
 # Based on EXTRACTION_FREQUENCIES from open_meteo_params.py
-# ============================================================================
+#
+# Usage:
+#   bash scripts/setup_cron.sh
+#   bash scripts/setup_cron.sh --dry-run (preview only)
 
-# -----------------------------------------------------------------------------
-# WEATHER DATA UPDATES
-# -----------------------------------------------------------------------------
+set -e
 
-# Current weather: Every 15 minutes (EXTRACTION_FREQUENCIES['current_weather'])
-*/15 * * * * cd $SERVER_DIR && python3 -m src.tasks.weather_update_task --current-only >> $SERVER_DIR/logs/weather_update/current.log 2>&1
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Hourly forecast: Every 3 hours (EXTRACTION_FREQUENCIES['weather_hourly'])
-0 */3 * * * cd $SERVER_DIR && python3 -m src.tasks.weather_update_task --hourly-only >> $SERVER_DIR/logs/weather_update/hourly.log 2>&1
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# Daily forecast: Once per day at 6 AM (EXTRACTION_FREQUENCIES['weather_daily'])
-0 6 * * * cd $SERVER_DIR && python3 -m src.tasks.weather_update_task --daily-only >> $SERVER_DIR/logs/weather_update/daily.log 2>&1
+# Dry run mode
+DRY_RUN=false
+if [ "$1" == "--dry-run" ]; then
+    DRY_RUN=true
+fi
 
-# Complete update (current + daily): Twice per day at 6 AM and 6 PM
-# Provides backup if individual jobs fail
-0 6,18 * * * cd $SERVER_DIR && python3 -m src.tasks.weather_update_task >> $SERVER_DIR/logs/weather_update/complete.log 2>&1
+echo "=================================================================="
+echo "  DATA-VIENTO CRON SETUP"
+echo "  Based on EXTRACTION_FREQUENCIES"
+echo "=================================================================="
+echo ""
+echo "Project Directory: $PROJECT_DIR"
+echo "Dry Run: $DRY_RUN"
+echo ""
 
-# -----------------------------------------------------------------------------
-# DATA CLEANUP
-# -----------------------------------------------------------------------------
+echo "${YELLOW}Running pre-flight checks...${NC}"
+echo ""
 
-# Cleanup old forecast data: Daily at 2 AM
-0 2 * * * cd $SERVER_DIR && python3 -m src.tasks.cleanup_task --days-to-keep 7 >> $SERVER_DIR/logs/cleanup/daily.log 2>&1
+# Check 1: CRON service
+echo -n "Checking CRON service... "
+if ! sudo service cron status > /dev/null 2>&1; then
+    echo "${RED}✗ CRON not running${NC}"
+    echo "${YELLOW}Starting CRON...${NC}"
+    sudo service cron start
+    if sudo service cron status > /dev/null 2>&1; then
+        echo "${GREEN}✓ CRON started${NC}"
+    else
+        echo "${RED}✗ Failed to start CRON${NC}"
+        exit 1
+    fi
+else
+    echo "${GREEN}✓${NC}"
+fi
 
-# -----------------------------------------------------------------------------
-# FUTURE: AIR QUALITY, MARINE, SATELLITE (to be implemented)
-# -----------------------------------------------------------------------------
+# Check 2: MySQL service
+echo -n "Checking MySQL service... "
+if ! sudo service mysql status > /dev/null 2>&1; then
+    echo "${RED}✗ MySQL not running${NC}"
+    echo "${YELLOW}Starting MySQL...${NC}"
+    sudo service mysql start
+    sleep 2
+    if sudo service mysql status > /dev/null 2>&1; then
+        echo "${GREEN}✓ MySQL started${NC}"
+    else
+        echo "${RED}✗ Failed to start MySQL${NC}"
+        exit 1
+    fi
+else
+    echo "${GREEN}✓${NC}"
+fi
 
-# Air Quality: Every 12 hours (EXTRACTION_FREQUENCIES['air_quality_current'])
-# 0 */12 * * * cd $SERVER_DIR && python3 -m src.tasks.air_quality_update_task >> $SERVER_DIR/logs/air_quality/update.log 2>&1
+# Check 3: Virtual environment
+echo -n "Checking virtual environment... "
+if [ ! -d "$PROJECT_DIR/.venv" ]; then
+    echo "${RED}✗ Virtual environment not found${NC}"
+    echo "${YELLOW}Creating virtual environment...${NC}"
+    cd "$PROJECT_DIR"
+    python3 -m venv venv
+    source venv/bin/activate
+    uv pip install -e
+    echo "${GREEN}✓ Virtual environment created${NC}"
+else
+    echo "${GREEN}✓${NC}"
+fi
 
-# Marine: Every 6 hours (EXTRACTION_FREQUENCIES['marine_current'])
-# 0 */6 * * * cd $SERVER_DIR && python3 -m src.tasks.marine_update_task >> $SERVER_DIR/logs/marine/update.log 2>&1
+# Check 4: .env file
+echo -n "Checking .env file... "
+if [ ! -f "$PROJECT_DIR/.env" ]; then
+    echo "${RED}✗ .env file not found${NC}"
+    echo "${YELLOW}Please create .env file before continuing${NC}"
+    exit 1
+else
+    echo "${GREEN}✓${NC}"
+fi
 
-# Satellite Radiation: Every day (EXTRACTION_FREQUENCIES['satellite_radiation'])
-# 0 6 * * * * cd $SERVER_DIR && python3 -m src.tasks.satellite_update_task >> $SERVER_DIR/logs/satellite/update.log 2>&1
+# Check 5: Database connection
+echo -n "Testing database connection... "
+source "$PROJECT_DIR/.venv/bin/activate"
+if python3 -c "from src.db.database import DatabaseConnection; DatabaseConnection()" 2>/dev/null; then
+    echo "${GREEN}✓${NC}"
+else
+    echo "${RED}✗ Database connection failed${NC}"
+    echo "${YELLOW}Check your .env database settings${NC}"
+    exit 1
+fi
+
+echo ""
+echo "${GREEN}✓ All pre-flight checks passed${NC}"
+echo ""
+
+
+# Make all scripts executable
+echo "${GREEN}Making scripts executable...${NC}"
+chmod +x "$SCRIPT_DIR"/weather/*.sh
+chmod +x "$SCRIPT_DIR"/air_quality/*.sh
+chmod +x "$SCRIPT_DIR"/marine/*.sh
+chmod +x "$SCRIPT_DIR"/satellite/*.sh
+chmod +x "$SCRIPT_DIR"/cleanups/*.sh
+
+# Create log directories
+echo "${GREEN}Creating log directories...${NC}"
+mkdir -p "$PROJECT_DIR/logs/weather_update"
+mkdir -p "$PROJECT_DIR/logs/air_quality_update"v
+mkdir -p "$PROJECT_DIR/logs/marine_update"
+mkdir -p "$PROJECT_DIR/logs/satellite_update"
+mkdir -p "$PROJECT_DIR/logs/cleanup"
+
+# Create temporary crontab file
+CRON_FILE=$(mktemp)
+
+# Backup existing crontab
+echo "${YELLOW}Backing up existing crontab...${NC}"
+crontab -l > "$CRON_FILE.backup" 2>/dev/null || echo "# New crontab" > "$CRON_FILE.backup"
+
+# Start building new crontab
+cat > "$CRON_FILE" << EOF
+# ================================================================
+# DATA-VIENTO AUTOMATED TASKS
+# University Project - Environmental Data Collection
+# 
+# Based on EXTRACTION_FREQUENCIES from open_meteo_params.py:
+#   - Current conditions: Every 15 minutes
+#   - Hourly forecasts: Every 3-6-12 hours (depending on service)
+#   - Daily forecasts: Once per day
+#   - Cleanups: Weekly/Monthly
+#
+# Auto-generated by setup_cron.sh
+# Last updated: $(date)
+# ================================================================
+
+# Set PATH for cron jobs
+PATH=/usr/local/bin:/usr/bin:/bin
+SHELL=/bin/bash
+
+# ================================================================
+# WEATHER SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Weather Current: Every 15 minutes (15 min frequency)
+*/15 * * * * $SCRIPT_DIR/weather/run_weather_current.sh
+
+# Weather Hourly Forecast: Every 3 hours (180 min frequency)
+0 */3 * * * $SCRIPT_DIR/weather/run_weather_hourly.sh
+
+# Weather Daily Forecast: Once per day at 6 AM (1440 min frequency)
+0 6 * * * $SCRIPT_DIR/weather/run_weather_daily.sh
+
+# ================================================================
+# AIR QUALITY SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Air Quality Current: Every 15 minutes (15 min frequency)
+*/15 * * * * $SCRIPT_DIR/air_quality/run_air_quality_current.sh
+
+# Air Quality Hourly Forecast: Every 6 hours (360 min frequency)
+0 */6 * * * $SCRIPT_DIR/air_quality/run_air_quality_hourly.sh
+
+# ================================================================
+# MARINE SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Marine Current: Every 15 minutes (15 min frequency)
+*/15 * * * * $SCRIPT_DIR/marine/run_marine_current.sh
+
+# Marine Hourly Forecast: Every 12 hours at midnight and noon (720 min frequency)
+0 0,12 * * * $SCRIPT_DIR/marine/run_marine_hourly.sh
+
+# Marine Daily Forecast: Once per day at 7 AM (1440 min frequency)
+0 7 * * * $SCRIPT_DIR/marine/run_marine_daily.sh
+
+# ================================================================
+# SATELLITE SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Satellite Daily: Once per day at 5 AM - fetches yesterday's data (1440 min frequency)
+0 5 * * * $SCRIPT_DIR/satellite/run_satellite_daily.sh
+
+# ================================================================
+# CLEANUP TASKS (Database Maintenance)
+# ================================================================
+
+# Weather Cleanup: Weekly on Sunday at 2 AM (keep 14 days)
+0 2 * * 0 $SCRIPT_DIR/cleanups/run_cleanup_weather.sh
+
+# Air Quality Cleanup: Weekly on Sunday at 3 AM (keep 30 days)
+0 3 * * 0 $SCRIPT_DIR/cleanups/run_cleanup_air_quality.sh
+
+# Marine Cleanup: Weekly on Sunday at 4 AM (keep 7 days hourly, 30 days daily)
+0 4 * * 0 $SCRIPT_DIR/cleanups/run_cleanup_marine.sh
+
+# Satellite Cleanup: Monthly on 1st at 5 AM (keep 180 days)
+0 5 1 * * $SCRIPT_DIR/cleanups/run_cleanup_satellite.sh
+
+# ================================================================
+# END DATA-VIENTO TASKS
+# ================================================================
 
 EOF
 
-# Replace $SERVER_DIR placeholder with actual path
-sed "s|\$SERVER_DIR|$SERVER_DIR|g" /tmp/data-viento-cron > /tmp/data-viento-cron-final
+# Replace $SCRIPT_DIR with actual path
+sed -i "s|\$SCRIPT_DIR|$SCRIPT_DIR|g" "$CRON_FILE"
 
-# Install crontab
-crontab -l > /tmp/current-cron 2>/dev/null || true
-cat /tmp/current-cron /tmp/data-viento-cron-final | crontab -
+# Preview crontab
+echo ""
+echo "${GREEN}================================================================${NC}"
+echo "${GREEN}  CRON JOBS TO BE INSTALLED${NC}"
+echo "${GREEN}================================================================${NC}"
+echo ""
+cat "$CRON_FILE"
+echo ""
 
-echo "✓ Cron jobs installed successfully!"
+# Show extraction frequencies
+echo "${BLUE}================================================================${NC}"
+echo "${BLUE}  EXTRACTION FREQUENCIES (from open_meteo_params.py)${NC}"
+echo "${BLUE}================================================================${NC}"
 echo ""
-echo "Installed schedules:"
-echo "  • Current weather:  Every 15 minutes"
-echo "  • Hourly forecast:  Every 3 hours"
-echo "  • Daily forecast:   Once per day (6 AM)"
-echo "  • Complete update:  Twice per day (6 AM, 6 PM)"
-echo "  • Cleanup:          Daily at 2 AM"
+echo "  ${YELLOW}Current Conditions (15 min intervals):${NC}"
+echo "    - Weather Current:     Every 15 minutes"
+echo "    - Air Quality Current: Every 15 minutes"
+echo "    - Marine Current:      Every 15 minutes"
 echo ""
-echo "Current crontab:"
-crontab -l | grep -A 100 "Data-Viento"
+echo "  ${YELLOW}Hourly Forecasts:${NC}"
+echo "    - Weather Hourly:      Every 3 hours (180 min)"
+echo "    - Air Quality Hourly:  Every 6 hours (360 min)"
+echo "    - Marine Hourly:       Every 12 hours (720 min)"
+echo ""
+echo "  ${YELLOW}Daily Forecasts (1440 min intervals):${NC}"
+echo "    - Weather Daily:       Once per day (6 AM)"
+echo "    - Marine Daily:        Once per day (7 AM)"
+echo "    - Satellite Daily:     Once per day (5 AM)"
+echo ""
+echo "  ${YELLOW}Cleanups:${NC}"
+echo "    - Weather:             Weekly (Sunday 2 AM)"
+echo "    - Air Quality:         Weekly (Sunday 3 AM)"
+echo "    - Marine:              Weekly (Sunday 4 AM)"
+echo "    - Satellite:           Monthly (1st day, 5 AM)"
+echo ""
+
+# Install or preview
+if [ "$DRY_RUN" = true ]; then
+    echo "${YELLOW}DRY RUN - No changes made${NC}"
+    echo "To install, run: bash scripts/setup_cron.sh"
+else
+    echo "${GREEN}Installing crontab...${NC}"
+    crontab "$CRON_FILE"
+    
+    echo ""
+    echo "${GREEN}✓ Crontab installed successfully!${NC}"
+    echo ""
+    echo "Backup saved to: $CRON_FILE.backup"
+    echo ""
+    echo "${YELLOW}To verify:${NC}"
+    echo "  crontab -l"
+    echo ""
+    echo "${YELLOW}To remove all Data-Viento cron jobs:${NC}"
+    echo "  crontab -r"
+    echo "  crontab $CRON_FILE.backup  # restore backup"
+    echo ""
+    echo "${YELLOW}To monitor logs:${NC}"
+    echo "  tail -f $PROJECT_DIR/logs/weather_update/current_\$(date +%Y%m%d).log"
+    echo "  tail -f $PROJECT_DIR/logs/**/*.log"
+fi
 
 # Cleanup
-rm /tmp/data-viento-cron /tmp/data-viento-cron-final /tmp/current-cron 2>/dev/null || true
+rm -f "$CRON_FILE"
+
+echo ""
+echo "${GREEN}================================================================${NC}"
+echo "${GREEN}  SETUP COMPLETE${NC}"
+echo "${GREEN}================================================================${NC}"
+echo ""
+echo "${GREEN}All systems ready! 🚀${NC}"
+echo ""
+echo "${BLUE}Next Steps:${NC}"
+echo "  1. Verify cron jobs: ${YELLOW}crontab -l${NC}"
+echo "  2. Test a script:    ${YELLOW}bash scripts/weather/run_weather_current.sh${NC}"
+echo "  3. Monitor logs:     ${YELLOW}tail -f logs/weather_update/*.log${NC}"
+echo ""
+
+ 

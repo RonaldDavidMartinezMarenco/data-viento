@@ -54,7 +54,7 @@ class ClimateResponse(APIMetadata):
     """
     Complete climate projection response from Open-Meteo
     
-    Maps to: climate_projections + climate_daily tables
+    Maps to: climate_projections + climate_daily tables 
     
     Note: 
     - start_date and end_date are passed as REQUEST parameters, not in response

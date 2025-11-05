@@ -324,9 +324,10 @@ class MarineService(BaseService):
             location_id, model_id, valid_date,
             wave_height_max, wave_direction_dominant, wave_period_max,
             swell_wave_height_max, swell_wave_direction_dominant,
-            forecast_reference_time, created_at,wind_wave_height_max
+            wind_wave_height_max,
+            forecast_reference_time, created_at
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
         )
         ON DUPLICATE KEY UPDATE
             wave_height_max = VALUES(wave_height_max),
@@ -334,8 +335,8 @@ class MarineService(BaseService):
             wave_period_max = VALUES(wave_period_max),
             swell_wave_height_max = VALUES(swell_wave_height_max),
             swell_wave_direction_dominant = VALUES(swell_wave_direction_dominant),
-            forecast_reference_time = NOW(),
-            wind_wave_height_max = VALUES(wind_wave_height_max)
+            wind_wave_height_max = VALUES(wind_wave_height_max),
+            forecast_reference_time = NOW()   
         """
         
         # Prepare bulk data

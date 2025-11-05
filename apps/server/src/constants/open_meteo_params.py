@@ -261,12 +261,12 @@ EXTRACTION_FREQUENCIES = {
     "current_weather": 15,           # Every 15 minutes
     "weather_hourly": 180,           # Every 3 hours
     "weather_daily": 1440,           # Every 24 hours (once per day)
-    "air_quality_current": 720,      # Every 12 hours
-    "air_quality_hourly": 720,       # Every 12 hours
-    "marine_current": 360,           # Every 6 hours
-    "marine_hourly": 360,            # Every 6 hours
-    "marine_daily": 1440,            # Every 24 hours
-    "satellite_radiation": 30,       # Every 30 minutes
+    "air_quality_current": 15,       # Every 15 minutes
+    "air_quality_hourly": 360,       # Every 6 hours
+    "marine_current": 15,            # Every 15 minutes
+    "marine_hourly": 720,            # Every 12 hours
+    "marine_daily": 1440,            # Every 24 hours (once per day)
+    "satellite_radiation": 1440,     # Every 24 hours (once per day)
     "climate_projections": None,     # On-demand only
 }
 
@@ -354,18 +354,18 @@ WEATHER_MODELS_DATA = [
         "description": "CAMS Solar radiation data. High-resolution solar irradiance for solar energy applications (15-30 minute resolution).",
     },
     {
-        "model_code": "CMCC_CM2_VR4",
-        "model_name": "CMCC Climate Model",
-        "provider": "CMCC",
-        "provider_country": "Italy",
-        "resolution_km": 25.0,
-        "resolution_degrees": 0.22,
-        "forecast_days": None,
-        "update_frequency_hours": None,
+        "model_code": "EC_Earth3P_HR",
+        "model_name": "EC_Earth3P-HR",
+        "provider": "EC-Earth Consortium",
+        "provider_country": "Europoean Union",
+        "resolution_km": 29.0,
+        "resolution_degrees": 0.261261,
+        "forecast_days": 0,
+        "update_frequency_hours": 0,
         "temporal_resolution": "daily",
         "geographic_coverage": "global",
         "model_type": "climate",
-        "is_active": False,
+        "is_active": True,
         "description": "CMCC climate change projections. Long-term climate projections for future scenarios (historical and future data).",
     },
 ]

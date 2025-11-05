@@ -18,9 +18,6 @@ Usage:
 """
 
 import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
 import asyncio
 import argparse
 from typing import Dict, Any, List
@@ -89,7 +86,7 @@ class WeatherUpdateTask(BaseTask):
             
             self.logger.info(f"Found {len(locations)} active locations to update")
             
-            # ✅ FIX: Run all location updates in a SINGLE event loop
+            # FIX: Run all location updates in a SINGLE event loop
             asyncio.run(self._update_all_locations(locations, result))
             
             # Success if at least one location updated
@@ -239,6 +236,7 @@ def main():
         '--forecast-days',
         type=int,
         default=7,
+        choices=[1,3,7,16],
         help='Number of forecast days (default: 7)'
     )
     
