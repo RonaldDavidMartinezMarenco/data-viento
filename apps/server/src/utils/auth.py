@@ -189,7 +189,7 @@ class AuthUtils:
         
         # Build token payload
         payload = {
-            'sub': user_id,              # Subject (user ID)
+            'sub': str(user_id),              # Subject (user ID)
             'username': username,         # Username
             'user_type': user_type,       # User role
             'exp': expire,                # Expiration time
@@ -243,7 +243,7 @@ class AuthUtils:
         expire = now + timedelta(days=cls.REFRESH_TOKEN_EXPIRE_DAYS)
         
         payload = {
-            'sub': user_id,
+            'sub': str(user_id),
             'username': username,
             'type': 'refresh',  # Mark as refresh token
             'exp': expire,
@@ -291,27 +291,44 @@ class AuthUtils:
         - Token signature is invalid
         - Token format is invalid
         """
+        
         try:
+            print(f"\n🔍 [decode_token] Starting decode...")
+            print(f"   Token (first 50): {token[:50]}...")
+            print(f"   Token (last 50): ...{token[-50:]}")
+            print(f"   Token length: {len(token)}")
+            print(f"   SECRET_KEY exists: {cls.SECRET_KEY is not None}")
+            print(f"   SECRET_KEY (first 10 chars): {cls.SECRET_KEY[:10] if cls.SECRET_KEY else 'None'}...")
+            print(f"   ALGORITHM: {cls.ALGORITHM}")
+            
             # Decode and validate token
             payload = jwt.decode(
                 token,
                 cls.SECRET_KEY,
                 algorithms=[cls.ALGORITHM]
             )
+            
+            print(f"✅ [decode_token] Decode successful!")
+            print(f"   Payload: {payload}")
             return payload
         
-        except jwt.ExpiredSignatureError:
-            # Token has expired
-            return None
-        
-        except jwt.InvalidTokenError:
-            # Token is invalid (bad signature, wrong format, etc.)
-            return None
-        
-        except Exception:
-            # Any other error
-            return None
-    
+        except jwt.ExpiredSignatureError as e:
+                # Token has expired
+                print(f"❌ [decode_token] Token expired: {e}")
+                return None
+            
+        except jwt.InvalidTokenError as e:
+                # Token is invalid (bad signature, wrong format, etc.)
+                print(f"❌ [decode_token] Invalid token: {e}")
+                return None
+            
+        except Exception as e:
+                # Any other error
+                print(f"💥 [decode_token] Unexpected error: {type(e).__name__}: {e}")
+                import traceback
+                traceback.print_exc()
+                return None
+            
     
     @classmethod
     def verify_token(cls, token: str) -> bool:
@@ -371,8 +388,16 @@ class AuthUtils:
         if not payload:
             return None
         
+        user_id_str = payload.get('sub')
+        
+        try:
+            user_id = int(user_id_str)  
+        except (ValueError, TypeError):
+             return None  
+        
+        
         return {
-            'user_id': payload.get('sub'),
+            'user_id': user_id,
             'username': payload.get('username'),
             'user_type': payload.get('user_type', 'standard_user')
         }
@@ -476,9 +501,15 @@ class AuthUtils:
         if payload.get('type') != 'refresh':
             return None
         
+        user_id_str = payload.get('sub')
+        try:
+            user_id = int(user_id_str)  
+        except (ValueError, TypeError):
+            return None
+        
         # Create new access token with same user info
         return cls.create_access_token(
-            user_id=payload.get('sub'),
+            user_id=user_id,
             username=payload.get('username'),
             user_type=payload.get('user_type', 'standard_user')
         )

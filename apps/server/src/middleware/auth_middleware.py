@@ -23,41 +23,62 @@ security = HTTPBearer()
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> Dict[str, Any]:
-    """
-    Dependency to get current authenticated user from JWT token
+    """Get current authenticated user from JWT token"""
     
-    Validates JWT token from Authorization header and returns user info.
-    
-    Args:
-        credentials: HTTP Bearer token from Authorization header
-        
-    Returns:
-        dict: User info from token (user_id, username, user_type)
-        
-    Raises:
-        HTTPException 401: If token is invalid or expired
-        
-    Usage in routes:
-        @router.get("/profile")
-        def get_profile(current_user: dict = Depends(get_current_user)):
-            user_id = current_user['user_id']
-            # ... fetch and return user profile
-    
-    Token format in request:
-        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-    """
-    # Extract token from credentials
     token = credentials.credentials
     
-    # Validate and decode token
-    user_info = AuthUtils.get_user_from_token(token)
+    # 🔍 DEBUG: Print token info
+    print(f"\n{'='*60}")
+    print(f"🔍 DEBUG: Token received")
+    print(f"   First 30 chars: {token[:30]}...")
+    print(f"   Last 30 chars: ...{token[-30:]}")
+    print(f"   Total length: {len(token)}")
+    print(f"{'='*60}\n")
     
-    if not user_info:
+    # Try to decode token
+    try:
+        # 🔍 DEBUG: Try decoding manually first
+        
+        print("🔍 Attempting to decode token...")
+        payload = AuthUtils.decode_token(token)
+        
+        print(f"🔍 Decoded payload: {payload}")
+        
+        if not payload:
+            print("❌ Payload is None - token decode failed!")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+        
+        print(f"✅ Payload decoded successfully")
+        print(f"   Contents: {payload}")
+        
+    except Exception as e:
+        print(f"💥 Exception during decode: {type(e).__name__}: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"}
         )
+    
+    # Get user info from token
+    print("🔍 Extracting user info from payload...")
+    user_info = AuthUtils.get_user_from_token(token)
+    
+    print(f"🔍 User info result: {user_info}")
+    
+    if not user_info:
+        print("❌ user_info is None!")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    
+    print(f"✅ User authenticated: {user_info.get('username')}")
+    print(f"{'='*60}\n")
     
     return user_info
 

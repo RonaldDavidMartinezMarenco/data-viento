@@ -57,94 +57,91 @@ function validateLoginForm(credentials) {
  * Handle login form submission
  */
 async function handleLogin(e) {
+    e.preventDefault();
+    
     console.log('🚀 Login form submitted');
     
-    e.preventDefault();
-    e.stopPropagation();
+    // Get form values
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    const rememberMe = rememberMeCheckbox.checked;
     
-    const credentials = {
-        username: usernameInput.value.trim(),
-        password: passwordInput.value
-    };
-    
-    console.log('📝 Credentials:', {
-        username: credentials.username,
-        password: '***HIDDEN***'
+    console.log('📝 Credentials:', { 
+        username, 
+        password: '***HIDDEN***', 
+        rememberMe 
     });
     
-    // Validate
-    if (!validateLoginForm(credentials)) {
-        console.log('❌ Validation failed');
+    // Basic validation
+    if (!username || !password) {
+        showFormError('Please enter both username and password');
         return;
     }
     
     console.log('✅ Validation passed');
     
+    // Set loading state
     setButtonLoading('loginButton', true);
     hideFormMessages();
     
     try {
-        const apiUrl = getApiUrl(API_CONFIG.endpoints.login);
-        console.log('📡 API URL:', apiUrl);
-        console.log('📤 Sending POST request...');
+        console.log('📡 Calling loginUser...');
         
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(credentials)
-        });
-        
-        console.log('📥 Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('📦 Response data:', data);
-        
-        if (!response.ok) {
-            console.error('❌ Login failed:', data);
-            
-            let errorMessage = 'Login failed. Please try again.';
-            
-            if (response.status === 401) {
-                errorMessage = 'Invalid username or password';
-            } else if (response.status === 422) {
-                errorMessage = 'Invalid request format';
-            } else if (data.detail) {
-                errorMessage = data.detail;
-            }
-            
-            throw new Error(errorMessage);
-        }
+        // Call login API
+        const response = await loginUser(username, password);
         
         console.log('🎉 LOGIN SUCCESS!');
-        console.log('👤 User:', data.user);
-        console.log('🔑 Access token:', data.access_token ? 'Received' : 'Missing');
-        console.log('🔑 Refresh token:', data.refresh_token ? 'Received' : 'Missing');
+        console.log('📦 Response:', response);
         
-        // Store tokens and user data
-        storeTokens(data.access_token, data.refresh_token);
-        storeUserData(data.user);
+        // ✅ UPDATED: Store tokens
+        if (response.access_token) {
+            console.log('🔑 Access token:', response.access_token.substring(0, 20) + '...');
+            storeToken(response.access_token);
+        }
         
-        console.log('💾 Data stored in localStorage');
+        if (response.refresh_token) {
+            console.log('🔑 Refresh token:', response.refresh_token.substring(0, 20) + '...');
+            localStorage.setItem('refresh_token', response.refresh_token);
+        }
         
-        // Handle "Remember Me"
-        if (rememberMeCheckbox && rememberMeCheckbox.checked) {
+        // ✅ UPDATED: Store complete user data from response
+        if (response.user) {
+            console.log('👤 User:', response.user);
+            storeUser(response.user);
+        }
+        
+        // Store remember me preference
+        if (rememberMe) {
             localStorage.setItem('remember_me', 'true');
             console.log('✅ Remember me enabled');
         }
         
+        console.log('💾 Data stored in localStorage');
+        
+        // Show success message
         showFormSuccess('Login successful! Redirecting...');
         
-        // Redirect to dashboard after 1 second
+        // Redirect to dashboard after short delay
+        console.log('🔄 Redirecting to dashboard...');
         setTimeout(() => {
-            console.log('🔄 Redirecting to dashboard...');
-            window.location.href = '/dashboard.html'; // ✅ Changed to dashboard
+            window.location.href = '/dashboard.html';
         }, 1000);
         
     } catch (error) {
-        console.error('💥 Login error:', error);
-        showFormError(error.message);
+        console.error('❌ Login failed:', error);
+        
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        if (error.status === 401) {
+            errorMessage = 'Invalid username or password';
+        } else if (error.status === 403) {
+            errorMessage = 'Your account has been disabled';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        showFormError(errorMessage);
+        
     } finally {
         setButtonLoading('loginButton', false);
     }
