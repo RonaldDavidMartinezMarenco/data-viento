@@ -15,7 +15,6 @@ CREATE TABLE users (
     preferred_units ENUM('metric','imperial') DEFAULT 'metric'
 );
 
-
 -- user preferences not general
 CREATE TABLE user_preferences (
     preference_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,15 +66,6 @@ CREATE TABLE locations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE location_names (
-    name_id INT AUTO_INCREMENT PRIMARY KEY,
-    location_id INT NOT NULL,
-    language_code VARCHAR(5),
-    name VARCHAR(200),
-    is_ascii BOOLEAN DEFAULT FALSE,
-    is_feature_name BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (location_id) REFERENCES locations(location_id)
-);
 -- Model Tables
 
 CREATE TABLE weather_models (

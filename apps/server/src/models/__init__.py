@@ -30,6 +30,7 @@ from .climate_models import (
     ClimateResponse,
 )
 
+
 __all__ = [
     # Base models
     "APIMetadata",

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DataViento</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles - FIXED: Use only existing CSS files -->
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="dashboard-title">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        </svg>
+                        DataViento Dashboard
+                    </h1>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <span id="userInitials">U</span>
+                        </div>
+                        <div class="user-details">
+                            <p class="user-name" id="userName">Loading...</p>
+                            <p class="user-email" id="userEmail">Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <button id="logoutButton" class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="dashboard-content">
+                <!-- Welcome Section -->
+                <section class="welcome-section">
+                    <h2>Welcome back, <span id="welcomeName">User</span>! 👋</h2>
+                    <p>You have successfully logged in to DataViento.</p>
+                </section>
+                
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>User ID</h3>
+                            <p id="statUserId">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(79, 172, 254, 0.1);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4facfe" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Account Type</h3>
+                            <p id="statUserType">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(250, 208, 44, 0.1);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fad02c" stroke-width="2">
+                                <path d="M12 2v20M2 12h20"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Preferred Units</h3>
+                            <p id="statUnits">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(56, 249, 215, 0.1);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38f9d7" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Account Status</h3>
+                            <p id="statStatus">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Data Section -->
+                <section class="user-data-section">
+                    <h3>Your Account Information</h3>
+                    <div class="data-table">
+                        <div class="data-row">
+                            <span class="data-label">User ID:</span>
+                            <span class="data-value" id="dataUserId">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Username:</span>
+                            <span class="data-value" id="dataUsername">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Email:</span>
+                            <span class="data-value" id="dataEmail">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Full Name:</span>
+                            <span class="data-value" id="dataFullName">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">User Type:</span>
+                            <span class="data-value" id="dataUserType">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Preferred Units:</span>
+                            <span class="data-value" id="dataUnits">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Account Created:</span>
+                            <span class="data-value" id="dataCreated">-</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Last Updated:</span>
+                            <span class="data-value" id="dataUpdated">-</span>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Token Info (for debugging) -->
+                <section class="token-section">
+                    <h3>Session Information</h3>
+                    <div class="token-info">
+                        <p><strong>Access Token:</strong></p>
+                        <code id="accessToken">Loading...</code>
+                        
+                        <p><strong>Refresh Token:</strong></p>
+                        <code id="refreshToken">Loading...</code>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>&copy; 2025 DataViento. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

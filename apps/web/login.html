@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to DataViento - Weather Intelligence Platform">
+    <title>Login - DataViento</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page" style="overflow: hidden">
+    <!-- Background Geometric Shapes -->
+    <div class="auth-shape shape-1"></div>
+    <div class="auth-shape shape-2"></div>
+    <div class="auth-shape shape-3"></div>
+
+    <!-- ========================================
+         LOGIN CONTAINER
+         ======================================== -->
+    <div class="auth-container">
+        <!-- Left Side - Branding -->
+        <div class="auth-branding">
+            <a href="/" class="auth-logo">
+                <span class="logo-text">DataViento</span>
+            </a>
+            
+            <div class="auth-branding-content">
+                <h1 class="auth-branding-title">
+                    Welcome back to <span class="highlight">DataViento</span>
+                </h1>
+                <p class="auth-branding-subtitle">
+                    Access your personalized weather intelligence dashboard and saved locations
+                </p>
+                
+                <div class="auth-features">
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="auth-feature-text">
+                            <h3>Real-time Weather Data</h3>
+                            <p>Access live weather updates from Open-Meteo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M2 12H22M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2Z" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="auth-feature-text">
+                            <h3>10 Favorite Locations</h3>
+                            <p>Track weather in all your important places</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 22V12M12 12V2M12 12L4.93 4.93M12 12L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="auth-feature-text">
+                            <h3>Customizable Preferences</h3>
+                            <p>Choose your units and display settings</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="auth-form-container">
+            <div class="auth-form-wrapper">
+                <!-- Back to Home Link -->
+                <a href="/" class="auth-back-link">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M12.5 5L7.5 10L12.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to home
+                </a>
+
+                <div class="auth-form-header">
+                    <h2 class="auth-form-title">Log in to your account</h2>
+                    <p class="auth-form-subtitle">
+                        Don't have an account? 
+                        <a href="/register.html" class="auth-link">Sign up for free</a>
+                    </p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form" method="POST" action="javascript:void(0);">
+                    <!-- Username Field -->
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            Username
+                            <span class="form-required">*</span>
+                        </label>
+                        <div class="form-input-wrapper">
+                            <svg class="form-input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 10C12.7614 10 15 7.76142 15 5C15 2.23858 12.7614 0 10 0C7.23858 0 5 2.23858 5 5C5 7.76142 7.23858 10 10 10Z" fill="currentColor"/>
+                                <path d="M10 12.5C5.58172 12.5 2 14.5817 2 17.5V20H18V17.5C18 14.5817 14.4183 12.5 10 12.5Z" fill="currentColor"/>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                class="form-input"
+                                placeholder="Enter your username"
+                                required
+                                autocomplete="username"
+                            >
+                        </div>
+                        <span class="form-error" id="username-error"></span>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            Password
+                            <span class="form-required">*</span>
+                        </label>
+                        <div class="form-input-wrapper">
+                            <svg class="form-input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M15.8333 9.16667H4.16667C3.24619 9.16667 2.5 9.91286 2.5 10.8333V16.6667C2.5 17.5871 3.24619 18.3333 4.16667 18.3333H15.8333C16.7538 18.3333 17.5 17.5871 17.5 16.6667V10.8333C17.5 9.91286 16.7538 9.16667 15.8333 9.16667Z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M5.83333 9.16667V5.83333C5.83333 4.72826 6.27232 3.66846 7.05372 2.88706C7.83512 2.10565 8.89493 1.66667 10 1.66667C11.1051 1.66667 12.1649 2.10565 12.9463 2.88706C13.7277 3.66846 14.1667 4.72826 14.1667 5.83333V9.16667" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input"
+                                placeholder="Enter your password"
+                                required
+                                autocomplete="current-password"
+                            >
+                            <!-- ✅ Eye toggle button -->
+                            <button type="button" class="form-input-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                                <!-- Eye icon (show password) -->
+                                <svg class="toggle-show" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <!-- Eye-off icon (hide password) -->
+                                <svg class="toggle-hide" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <span class="form-error" id="password-error"></span>
+                    </div>
+
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="form-options">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="remember" name="remember">
+                            <span class="checkbox-label">Remember me</span>
+                        </label>
+                        <a href="/forgot-password.html" class="form-link">Forgot password?</a>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="formError" class="form-message form-message-error" style="display: none;">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M10 6V10M10 14H10.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span id="errorMessage"></span>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-full" id="loginButton">
+                        <span class="btn-text">Log in</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg class="spinner" width="20" height="20" viewBox="0 0 20 20">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="50.265" stroke-dashoffset="12.566" />
+                            </svg>
+                        </span>
+                    </button>
+
+                    <!-- Social Login (Optional - for future) -->
+                    <div class="form-divider">
+                        <span>or continue with</span>
+                    </div>
+
+                    <div class="social-login">
+                        <button type="button" class="btn btn-social" disabled title="Coming soon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M18.1713 8.36785H10V11.8441H14.7093C14.3155 13.9662 12.4763 15.3204 10 15.3204C7.15905 15.3204 4.84825 13.0096 4.84825 10.1686C4.84825 7.32765 7.15905 5.01685 10 5.01685C11.2813 5.01685 12.4388 5.47785 13.3388 6.2441L15.8938 3.68915C14.3638 2.2966 12.2988 1.5 10 1.5C5.0285 1.5 1 5.5285 1 10.5C1 15.4715 5.0285 19.5 10 19.5C14.565 19.5 18.5 16.065 18.5 10.5C18.5 9.7691 18.3763 9.0621 18.1713 8.36785Z" fill="currentColor"/>
+                            </svg>
+                            Google
+                        </button>
+                        <button type="button" class="btn btn-social" disabled title="Coming soon">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 0C4.477 0 0 4.477 0 10C0 14.418 2.865 18.166 6.839 19.489C7.339 19.579 7.521 19.267 7.521 18.997C7.521 18.755 7.513 18.098 7.508 17.205C4.726 17.806 4.139 15.896 4.139 15.896C3.685 14.729 3.029 14.418 3.029 14.418C2.121 13.799 3.098 13.812 3.098 13.812C4.101 13.883 4.629 14.845 4.629 14.845C5.521 16.372 6.97 15.931 7.539 15.67C7.631 15.022 7.889 14.582 8.175 14.327C5.955 14.069 3.62 13.215 3.62 9.413C3.62 8.329 4.01 7.441 4.649 6.744C4.546 6.487 4.203 5.476 4.747 4.111C4.747 4.111 5.586 3.838 7.497 5.117C8.31 4.891 9.157 4.778 10 4.774C10.843 4.778 11.69 4.891 12.504 5.117C14.414 3.838 15.251 4.111 15.251 4.111C15.796 5.476 15.453 6.487 15.35 6.744C15.99 7.441 16.378 8.329 16.378 9.413C16.378 13.224 14.039 14.066 11.813 14.318C12.172 14.631 12.491 15.246 12.491 16.185C12.491 17.531 12.479 18.615 12.479 18.997C12.479 19.27 12.659 19.585 13.166 19.488C17.137 18.163 20 14.417 20 10C20 4.477 15.523 0 10 0Z" fill="currentColor"/>
+                            </svg>
+                            GitHub
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>
