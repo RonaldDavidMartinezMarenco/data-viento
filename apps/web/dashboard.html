@@ -13,6 +13,7 @@
     <!-- Styles - FIXED: Use only existing CSS files -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <!-- Dashboard Container -->
@@ -54,108 +55,269 @@
         
         <!-- Main Content -->
         <main class="dashboard-main">
-            <div class="dashboard-content">
-                <!-- Welcome Section -->
-                <section class="welcome-section">
-                    <h2>Welcome back, <span id="welcomeName">User</span>! 👋</h2>
-                    <p>You have successfully logged in to DataViento.</p>
-                </section>
-                
-                <!-- Stats Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3>User ID</h3>
-                            <p id="statUserId">-</p>
-                        </div>
-                    </div>
+            <!-- ✅ NEW: Sidebar Navigation -->
+            <aside class="dashboard-sidebar">
+                <nav class="sidebar-nav">
+                    <h3 class="sidebar-title">Weather Models</h3>
                     
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(79, 172, 254, 0.1);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4facfe" stroke-width="2">
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-item active" data-section="overview">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span>Overview</span>
+                        </li>
+                        
+                        <li class="sidebar-item" data-section="weather">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path>
+                            </svg>
+                            <span>Weather Forecast</span>
+                        </li>
+                        
+                        <li class="sidebar-item" data-section="air-quality">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 12h8M12 8v8"></path>
+                            </svg>
+                            <span>Air Quality</span>
+                        </li>
+                        
+                        <li class="sidebar-item" data-section="marine">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12h18M3 6h18M3 18h18"></path>
+                            </svg>
+                            <span>Marine Weather</span>
+                        </li>
+                        
+                        <li class="sidebar-item" data-section="satellite">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+                            </svg>
+                            <span>Satellite Radiation</span>
+                        </li>
+                        
+                        <li class="sidebar-item" data-section="climate">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            </svg>
+                            <span>Climate Change</span>
+                        </li>
+                        
+                        <li class="sidebar-divider"></li>
+                        
+                        <li class="sidebar-item" data-section="settings">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+                            </svg>
+                            <span>Settings</span>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+            
+            <div class="dashboard-content">
+
+                <div class="location-selector-bar">
+                    <div class="selector-content">
+                        <label for="activeLocationSelect">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                 <circle cx="12" cy="10" r="3"></circle>
                             </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Account Type</h3>
-                            <p id="statUserType">-</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(250, 208, 44, 0.1);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fad02c" stroke-width="2">
-                                <path d="M12 2v20M2 12h20"></path>
+                            <span>Viewing data for:</span>
+                        </label>
+                        <select id="activeLocationSelect" class="location-select">
+                            <option value="">Loading locations...</option>
+                        </select>
+                        <button id="refreshDataBtn" class="btn btn-secondary btn-sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                             </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Preferred Units</h3>
-                            <p id="statUnits">-</p>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(56, 249, 215, 0.1);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38f9d7" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                        </div>
-                        <div class="stat-info">
-                            <h3>Account Status</h3>
-                            <p id="statStatus">-</p>
-                        </div>
+                            Refresh Data
+                        </button>
                     </div>
                 </div>
                 
-                <!-- User Data Section -->
-                <section class="user-data-section">
-                    <h3>Your Account Information</h3>
-                    <div class="data-table">
-                        <div class="data-row">
-                            <span class="data-label">User ID:</span>
-                            <span class="data-value" id="dataUserId">-</span>
+                <!-- Overview Section (default) -->
+                <section id="section-overview" class="content-section active">
+                    <!-- Welcome Section -->
+                    <div class="welcome-section">
+                        <h2>Welcome back, <span id="welcomeName">User</span>! 👋</h2>
+                        <p>You have successfully logged in to DataViento.</p>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(102, 126, 234, 0.1);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <h3>User ID</h3>
+                                <p id="statUserId">-</p>
+                            </div>
                         </div>
-                        <div class="data-row">
-                            <span class="data-label">Username:</span>
-                            <span class="data-value" id="dataUsername">-</span>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(79, 172, 254, 0.1);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4facfe" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Account Type</h3>
+                                <p id="statUserType">-</p>
+                            </div>
                         </div>
-                        <div class="data-row">
-                            <span class="data-label">Email:</span>
-                            <span class="data-value" id="dataEmail">-</span>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(250, 208, 44, 0.1);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fad02c" stroke-width="2">
+                                    <path d="M12 2v20M2 12h20"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Preferred Units</h3>
+                                <p id="statUnits">-</p>
+                            </div>
                         </div>
-                        <div class="data-row">
-                            <span class="data-label">Full Name:</span>
-                            <span class="data-value" id="dataFullName">-</span>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(56, 249, 215, 0.1);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38f9d7" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Account Status</h3>
+                                <p id="statStatus">-</p>
+                            </div>
                         </div>
-                        <div class="data-row">
-                            <span class="data-label">User Type:</span>
-                            <span class="data-value" id="dataUserType">-</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Preferred Units:</span>
-                            <span class="data-value" id="dataUnits">-</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Account Created:</span>
-                            <span class="data-value" id="dataCreated">-</span>
-                        </div>
-                        <div class="data-row">
-                            <span class="data-label">Last Updated:</span>
-                            <span class="data-value" id="dataUpdated">-</span>
+                    </div>
+                    
+                    <!-- User Data Section -->
+                    <div class="user-data-section">
+                        <h3>Your Account Information</h3>
+                        <div class="data-table">
+                            <div class="data-row">
+                                <span class="data-label">User ID:</span>
+                                <span class="data-value" id="dataUserId">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Username:</span>
+                                <span class="data-value" id="dataUsername">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Email:</span>
+                                <span class="data-value" id="dataEmail">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Full Name:</span>
+                                <span class="data-value" id="dataFullName">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">User Type:</span>
+                                <span class="data-value" id="dataUserType">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Preferred Units:</span>
+                                <span class="data-value" id="dataUnits">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Account Created:</span>
+                                <span class="data-value" id="dataCreated">-</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Last Updated:</span>
+                                <span class="data-value" id="dataUpdated">-</span>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                 <!-- Settings Section -->
-                <section class="settings-section">
+                <section id="section-weather" class="content-section">
+                    <h2>⛅ Weather Forecast</h2>
+                    <p class="section-description">Current weather and 7-day forecast data</p>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Temperature Forecast (7 days)</h3>
+                            <canvas id="weatherTempChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h3>Wind Speed (24 hours)</h3>
+                            <canvas id="weatherWindChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Air Quality Section -->
+                <section id="section-air-quality" class="content-section">
+                    <h2>🌫️ Air Quality</h2>
+                    <p class="section-description">PM2.5, PM10, and pollutant levels</p>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Air Quality Index</h3>
+                            <canvas id="airQualityChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Marine Section -->
+                <section id="section-marine" class="content-section">
+                    <h2>🌊 Marine Weather</h2>
+                    <p class="section-description">Wave height, ocean temperature, and currents</p>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Wave Height Forecast</h3>
+                            <canvas id="marineWaveChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Satellite Section -->
+                <section id="section-satellite" class="content-section">
+                    <h2>☀️ Satellite Radiation</h2>
+                    <p class="section-description">Solar radiation and irradiance data</p>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Solar Radiation (Daily)</h3>
+                            <canvas id="satelliteChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Climate Section -->
+                <section id="section-climate" class="content-section">
+                    <h2>🌍 Climate Change</h2>
+                    <p class="section-description">Long-term climate trends and projections</p>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3>Temperature Trends</h3>
+                            <canvas id="climateTempChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Settings Section (moved from overview) -->
+                <section id="section-settings" class="content-section">
+                    <!-- Your existing Settings Section code goes here -->
                     <h3>⚙️ Account Settings</h3>
                     
                     <!-- Location Management -->
@@ -260,17 +422,17 @@
                             </label>
                         </div>
                     </div>
-                </section>
-
-                <!-- Token Info (for debugging) -->
-                <section class="token-section">
-                    <h3>Session Information</h3>
-                    <div class="token-info">
-                        <p><strong>Access Token:</strong></p>
-                        <code id="accessToken">Loading...</code>
-                        
-                        <p><strong>Refresh Token:</strong></p>
-                        <code id="refreshToken">Loading...</code>
+                    
+                    <!-- Token Info (for debugging) -->
+                    <div class="token-section">
+                        <h3>Session Information</h3>
+                        <div class="token-info">
+                            <p><strong>Access Token:</strong></p>
+                            <code id="accessToken">Loading...</code>
+                            
+                            <p><strong>Refresh Token:</strong></p>
+                            <code id="refreshToken">Loading...</code>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -286,5 +448,6 @@
     <script src="/js/auth.js"></script>
     <script src="/js/dashboard.js"></script>
     <script src="/js/settings.js"></script>
+    <script src="/js/weather-charts.js"></script> 
 </body>
 </html>

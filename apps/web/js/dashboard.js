@@ -489,6 +489,168 @@ function setupLogout() {
     
     console.log('Logout button setup complete');
 }
+// ========================================
+// ACTIVE LOCATION MANAGEMENT
+// ======================================== 
+
+let activeLocationId = null; // Currently selected location
+
+/**
+ * Populate location selector dropdown
+ * Uses userLocations from settings.js
+ */
+function populateLocationSelector() {
+    console.log('📍 Populating location selector...');
+    
+    const select = document.getElementById('activeLocationSelect');
+    
+    if (!select) {
+        console.warn('⚠️ Location selector not found');
+        return;
+    }
+    
+    // Clear existing options
+    select.innerHTML = '';
+    
+    // Check if userLocations is available (loaded from settings.js)
+    if (typeof userLocations === 'undefined' || !userLocations || userLocations.length === 0) {
+        select.innerHTML = '<option value="">No locations added yet</option>';
+        console.log('ℹ️ No user locations available');
+        return;
+    }
+    
+    // Add options for each user location
+    userLocations.forEach(userLoc => {
+        // Find full location details
+        const location = availableLocations.find(loc => loc.location_id === userLoc.location_id);
+        
+        if (!location) return;
+        
+        const option = document.createElement('option');
+        option.value = userLoc.user_location_id;
+        option.textContent = `${userLoc.custom_name} (${location.name})`;
+        
+        // Mark primary location as selected by default
+        if (userLoc.is_primary) {
+            option.selected = true;
+            activeLocationId = userLoc.user_location_id;
+        }
+        
+        select.appendChild(option);
+    });
+    
+    console.log(`✅ Added ${userLocations.length} locations to selector`);
+    console.log(`📍 Active location: ${activeLocationId}`);
+}
+
+/**
+ * Handle location selection change
+ */
+function handleLocationChange() {
+    console.log('🔄 Location changed');
+    
+    const select = document.getElementById('activeLocationSelect');
+    const selectedId = parseInt(select.value);
+    
+    if (!selectedId) {
+        console.warn('⚠️ No location selected');
+        return;
+    }
+    
+    activeLocationId = selectedId;
+    
+    // Find the selected location details
+    const userLoc = userLocations.find(ul => ul.user_location_id === selectedId);
+    
+    if (userLoc) {
+        const location = availableLocations.find(loc => loc.location_id === userLoc.location_id);
+        console.log(`📍 Active location changed to: ${userLoc.custom_name} (${location ? location.name : 'Unknown'})`);
+    }
+    
+    // Reload all charts with new location's data
+    refreshAllCharts();
+}
+
+/**
+ * Refresh all charts with current location's data
+ */
+function refreshAllCharts() {
+    console.log('🔄 Refreshing all charts for location:', activeLocationId);
+    
+    // Show loading state on refresh button
+    const refreshBtn = document.getElementById('refreshDataBtn');
+    if (refreshBtn) {
+        refreshBtn.classList.add('rotating');
+    }
+    
+    // Later we'll fetch real data from backend
+    // For now, just recreate charts with sample data
+    
+    // Recreate weather charts
+    if (typeof createWeatherTempChart === 'function') {
+        createWeatherTempChart([]);
+    }
+    if (typeof createWeatherWindChart === 'function') {
+        createWeatherWindChart([]);
+    }
+    
+    if (typeof createAirQualityChart === 'function') {
+        createAirQualityChart([]);
+    }
+
+    if (typeof createMarineWaveChart === 'function') {
+        createMarineWaveChart([]);
+    }
+
+    if (typeof createSatelliteChart === 'function') {
+        createSatelliteChart([]);
+    }
+    if (typeof createClimateTempChart === 'function') {
+        createClimateTempChart([]);
+    }
+
+    // Remove loading state after 1 second
+    setTimeout(() => {
+        if (refreshBtn) {
+            refreshBtn.classList.remove('rotating');
+        }
+        console.log('✅ Charts refreshed');
+    }, 1000);
+}
+
+function initializeSidebar() {
+    console.log('🧭 Initializing sidebar navigation...');
+    
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const contentSections = document.querySelectorAll('.content-section');
+    
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
+            
+            // Remove active class from all sidebar items
+            sidebarItems.forEach(i => i.classList.remove('active'));
+            
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Hide all content sections
+            contentSections.forEach(section => section.classList.remove('active'));
+            
+            // Show selected section
+            const targetSection = document.getElementById(`section-${sectionId}`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                console.log(`📄 Switched to section: ${sectionId}`);
+            }
+        });
+    });
+    
+    console.log('✅ Sidebar navigation initialized');
+}
+
+// Call sidebar initialization when DOM is ready
+
 /**
  * Setup logout button
  * 
@@ -536,16 +698,23 @@ function formatDateTime(date) {
     
     return date.toLocaleString('en-US', options);
 }
+
+// ========================================
+// INITIALIZE DASHBOARD
+// ========================================
+
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOM loaded');
-    console.log('Initializing dashboard...');
+    console.log('🚀 DOM loaded - Initializing dashboard...');
     
-
-    if (!checkAuthentication())
-    {
-        return;
+    // STEP 1: Check authentication first
+    if (!checkAuthentication()) {
+        return; // Stop if not authenticated
     }
-
+    
+    // STEP 2: Initialize sidebar navigation
+    initializeSidebar();
+    
+    // STEP 3: Fetch and display user data
     try {
         console.log('\n--- Fetching User Data ---');
         const userData = await fetchUserData();
@@ -566,21 +735,46 @@ document.addEventListener('DOMContentLoaded', async function() {
             populateHeader(userData);
             populateStats(userData);
             populateDataTable(userData);
-            
             displayTokens();
             setupLogout();
-            console.log('\n Initializing settings')
-            await initializeSettings()
         }
         
     } catch (error) {
-        console.error('Failed to initialize dashboard:', error);
+        console.error('❌ Failed to fetch user data:', error);
         alert('Failed to load dashboard. Please try logging in again.');
         window.location.href = '/login.html';
+        return;
     }
     
+    // STEP 4: Initialize settings and load user locations
+    console.log('\n--- Initializing Settings ---');
+    if (typeof initializeSettings === 'function') {
+        await initializeSettings(); // This loads availableLocations and userLocations
+    } else {
+        console.warn('⚠️ initializeSettings function not found!');
+    }
     
-    console.log('Dashboard initialized');
+    // STEP 5: Populate location selector after settings are ready
+    console.log('\n--- Setting Up Location Selector ---');
+    populateLocationSelector();
+    
+    // STEP 6: Set up event listeners
+    const locationSelect = document.getElementById('activeLocationSelect');
+    if (locationSelect) {
+        locationSelect.addEventListener('change', handleLocationChange);
+        console.log('✅ Location change listener added');
+    }
+    
+    const refreshBtn = document.getElementById('refreshDataBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshAllCharts);
+        console.log('✅ Refresh button listener added');
+    }
+    
+    // STEP 7: Load initial charts for selected location
+    console.log('\n--- Loading Charts ---');
+    refreshAllCharts();
+    
+    console.log('\n✅ Dashboard fully initialized!');
 });
-
 

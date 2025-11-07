@@ -216,7 +216,7 @@ async function addLocation() {
     console.log('+ Adding location...');
     
     const dropdown = document.getElementById('locationSelect');
-    const customNameInput = document.getElementById('customLocationName')
+    const customNameInput = document.getElementById('customLocationName');
     const selectedLocationId = parseInt(dropdown.value);
     
     if (!selectedLocationId) {
