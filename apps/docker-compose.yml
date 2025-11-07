@@ -1,11 +1,10 @@
 services:
   server:
-    build:
-      context: .
+    build: ./server
     ports:
       - "8000:8000"
     volumes:
-      - ./src:/app/src
+      - ./server/src:/app/src
     environment:
       - DB_HOST=mysql
       - DB_PASSWORD=password
@@ -19,6 +18,11 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./db:/docker-entrypoint-initdb.d
+      - ./server/db:/docker-entrypoint-initdb.d
+  web:
+    build: ./web
+    container_name: caddy_server
+    ports:
+      - "80:80"
 volumes:
   db_data:
