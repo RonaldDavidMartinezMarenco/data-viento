@@ -8,6 +8,10 @@ services:
       - DB_HOST=mysql
       - DB_PASSWORD=password
       - DB_NAME=data_viento_database
+    env_file:
+      - ./server/.env
+    depends_on:
+      - mysql
     networks:
       - default
       - cf_tunnel
