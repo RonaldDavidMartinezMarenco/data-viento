@@ -1,0 +1,85 @@
+# ================================================================
+# DATA-VIENTO AUTOMATED TASKS
+# University Project - Environmental Data Collection
+#
+# Based on EXTRACTION_FREQUENCIES from open_meteo_params.py:
+#   - Current conditions: Every 15 minutes
+#   - Hourly forecasts: Every 3-6-12 hours (depending on service)
+#   - Daily forecasts: Once per day
+#   - Cleanups: Weekly/Monthly
+#
+# Auto-generated for /etc/cron.d
+# Last updated: 2025-11-07 01:00 EST
+# ================================================================
+
+# Environment for cron.d jobs
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Optional: who to mail on failures
+# MAILTO=ops@example.com
+
+# Base directory for scripts
+# NOTE: cron.d files do not expand shell variables in the schedule lines.
+# We inline the absolute path (/app) directly in each command.
+# ================================================================
+# WEATHER SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Weather Current: Every 15 minutes (15 min frequency)
+*/15 * * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.weather_update_task --current-only
+
+# Weather Hourly Forecast: Every 3 hours (180 min frequency)
+0 */3 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.weather_update_task --hourly-only
+
+# Weather Daily Forecast: Once per day at 6 AM (1440 min frequency)
+0 6 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.weather_update_task --daily-only --forecast-days 7
+
+# ================================================================
+# AIR QUALITY SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Air Quality Current: Every 15 minutes (15 min frequency)
+*/15 * * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.air_quality_update_task --current-only
+
+# Air Quality Hourly Forecast: Every 6 hours (360 min frequency)
+0 */6 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.air_quality_update_task --hourly-only --forecast-days 5
+
+# ================================================================
+# MARINE SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Marine Current: Every 15 minutes (15 min frequency)
+*/15 * * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.marine_update_task --current-only
+
+# Marine Hourly Forecast: Every 12 hours at midnight and noon (720 min frequency)
+0 0,12 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.marine_update_task --hourly-only --forecast-days 3
+
+# Marine Daily Forecast: Once per day at 7 AM (1440 min frequency)
+0 7 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.marine_update_task --daily-only --forecast-days 5
+
+# ================================================================
+# SATELLITE SERVICE (EXTRACTION_FREQUENCIES)
+# ================================================================
+
+# Satellite Daily: Once per day at 5 AM - fetches yesterday's data (1440 min frequency)
+0 5 * * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.updates.satellite_update_task --days 1
+
+# ================================================================
+# CLEANUP TASKS (Database Maintenance)
+# ================================================================
+
+# Weather Cleanup: Weekly on Sunday at 2 AM (keep 14 days)
+0 2 * * 0 rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.cleanups.cleanup_task --days 14
+
+# Air Quality Cleanup: Weekly on Sunday at 3 AM (keep 30 days)
+0 3 * * 0 rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.cleanups.cleanup_task_air_quality --days 30
+
+# Marine Cleanup: Weekly on Sunday at 4 AM (keep 7 days hourly, 30 days daily)
+0 4 * * 0 rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.cleanups.cleanup_marine --days-hourly 7 --days-daily 30
+
+# Satellite Cleanup: Monthly on 1st at 5 AM (keep 180 days)
+0 5 1 * * rdmm404 docker compose -f /home/rdmm404/apps/data-viento/apps/docker-compose.prd.yml run --rm server python -m src.tasks.cleanups.cleanup_satellite --days 180
+
+# ================================================================
+# END DATA-VIENTO TASKS
+# ================================================================
