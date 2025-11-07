@@ -1,8 +1,9 @@
+USE data_viento_database;
 -- SCHEMA DATA-VIENTO
 
 -- USER MANAGMENT
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -16,7 +17,7 @@ CREATE TABLE users (
 );
 
 -- user preferences not general
-CREATE TABLE user_preferences (
+CREATE TABLE IF NOT EXISTS user_preferences (
     preference_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     preferred_temperature_unit ENUM('celsius','fahrenheit','kelvin') DEFAULT 'celsius',
@@ -28,24 +29,10 @@ CREATE TABLE user_preferences (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- user locations
-CREATE TABLE user_locations (
-    user_location_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    location_id INT NOT NULL,
-    custom_name VARCHAR(100),
-    is_primary BOOLEAN DEFAULT FALSE,
-    notification_enabled BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_accessed TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (location_id) REFERENCES locations(location_id)
-);
-
 
 -- LOCATIONS TABLES
 
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     location_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     latitude DECIMAL(10,7) NOT NULL,
@@ -66,9 +53,23 @@ CREATE TABLE locations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- user locations
+CREATE TABLE IF NOT EXISTS user_locations (
+    user_location_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    location_id INT NOT NULL,
+    custom_name VARCHAR(100),
+    is_primary BOOLEAN DEFAULT FALSE,
+    notification_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_accessed TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (location_id) REFERENCES locations(location_id)
+);
+
 -- Model Tables
 
-CREATE TABLE weather_models (
+CREATE TABLE IF NOT EXISTS weather_models (
     model_id INT AUTO_INCREMENT PRIMARY KEY,
     model_code VARCHAR(50) NOT NULL UNIQUE,
     model_name VARCHAR(100),
@@ -86,7 +87,7 @@ CREATE TABLE weather_models (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE weather_parameters (
+CREATE TABLE IF NOT EXISTS weather_parameters (
     parameter_id INT AUTO_INCREMENT PRIMARY KEY,
     parameter_code VARCHAR(100) NOT NULL UNIQUE,
     parameter_name VARCHAR(150),
@@ -100,7 +101,7 @@ CREATE TABLE weather_parameters (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE model_parameters (
+CREATE TABLE IF NOT EXISTS model_parameters (
     model_parameter_id INT AUTO_INCREMENT PRIMARY KEY,
     model_id INT NOT NULL,
     parameter_id INT NOT NULL,
@@ -113,7 +114,7 @@ CREATE TABLE model_parameters (
 );
 
 -- actual weather table
-CREATE TABLE current_weather (
+CREATE TABLE IF NOT EXISTS current_weather (
     current_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT,
@@ -134,7 +135,7 @@ CREATE TABLE current_weather (
 );
 
 -- weather forecast data
-CREATE TABLE weather_forecasts (
+CREATE TABLE IF NOT EXISTS weather_forecasts (
     forecast_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -147,7 +148,7 @@ CREATE TABLE weather_forecasts (
     FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
 );
 
-CREATE TABLE forecast_data (
+CREATE TABLE IF NOT EXISTS forecast_data (
     data_id INT AUTO_INCREMENT PRIMARY KEY,
     forecast_id INT NOT NULL,
     parameter_id INT NOT NULL,
@@ -163,7 +164,7 @@ CREATE TABLE forecast_data (
     FOREIGN KEY (parameter_id) REFERENCES weather_parameters(parameter_id)
 );
 
-CREATE TABLE weather_forecasts_daily (
+CREATE TABLE IF NOT EXISTS weather_forecasts_daily (
     forecast_day_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -190,7 +191,7 @@ CREATE TABLE weather_forecasts_daily (
 );
 
 -- Air Quality
-CREATE TABLE air_quality_current (
+CREATE TABLE IF NOT EXISTS air_quality_current (
     air_quality_current_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     observation_time TIMESTAMP NOT NULL,
@@ -209,7 +210,7 @@ CREATE TABLE air_quality_current (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
-CREATE TABLE air_quality_forecasts (
+CREATE TABLE IF NOT EXISTS air_quality_forecasts (
     air_quality_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -223,7 +224,7 @@ CREATE TABLE air_quality_forecasts (
     FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
 );
 
-CREATE TABLE air_quality_data (
+CREATE TABLE IF NOT EXISTS air_quality_data (
     data_id INT AUTO_INCREMENT PRIMARY KEY,
     air_quality_id INT NOT NULL,
     parameter_id INT NOT NULL,
@@ -239,7 +240,7 @@ CREATE TABLE air_quality_data (
 );
 
 -- Marine Weather
-CREATE TABLE marine_current (
+CREATE TABLE IF NOT EXISTS marine_current (
     marine_current_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     observation_time TIMESTAMP NOT NULL,
@@ -258,7 +259,7 @@ CREATE TABLE marine_current (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
-CREATE TABLE marine_forecasts (
+CREATE TABLE IF NOT EXISTS marine_forecasts (
     marine_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -271,7 +272,7 @@ CREATE TABLE marine_forecasts (
     FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
 );
 
-CREATE TABLE marine_data (
+CREATE TABLE IF NOT EXISTS marine_data (
     data_id INT AUTO_INCREMENT PRIMARY KEY,
     marine_id INT NOT NULL,
     parameter_id INT NOT NULL,
@@ -286,7 +287,7 @@ CREATE TABLE marine_data (
     FOREIGN KEY (parameter_id) REFERENCES weather_parameters(parameter_id)
 );
 
-CREATE TABLE marine_forecasts_daily (
+CREATE TABLE IF NOT EXISTS marine_forecasts_daily (
     forecast_day_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -305,7 +306,7 @@ CREATE TABLE marine_forecasts_daily (
 );
 
 -- Satellite Radiation
-CREATE TABLE satellite_radiation_daily (
+CREATE TABLE IF NOT EXISTS satellite_radiation_daily (
     radiation_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -327,7 +328,7 @@ CREATE TABLE satellite_radiation_daily (
 
 
 -- Climate Change
-CREATE TABLE climate_projections (
+CREATE TABLE IF NOT EXISTS climate_projections (
     climate_id INT AUTO_INCREMENT PRIMARY KEY,
     location_id INT NOT NULL,
     model_id INT NOT NULL,
@@ -344,7 +345,7 @@ CREATE TABLE climate_projections (
     FOREIGN KEY (model_id) REFERENCES weather_models(model_id)
 );
 
-CREATE TABLE climate_daily (
+CREATE TABLE IF NOT EXISTS climate_daily (
     data_id INT AUTO_INCREMENT PRIMARY KEY,
     climate_id INT NOT NULL,
     valid_date DATE NOT NULL,
@@ -369,7 +370,7 @@ CREATE TABLE climate_daily (
 
 -- Weather Codes
 
-CREATE TABLE weather_codes (
+CREATE TABLE IF NOT EXISTS weather_codes (
     code_id INT AUTO_INCREMENT PRIMARY KEY,
     wmo_code INTEGER NOT NULL UNIQUE,
     code_description VARCHAR(200),
@@ -380,7 +381,7 @@ CREATE TABLE weather_codes (
     is_severe BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE weather_code_translations (
+CREATE TABLE IF NOT EXISTS weather_code_translations (
     translation_id INT AUTO_INCREMENT PRIMARY KEY,
     code_id INT NOT NULL,
     language_code VARCHAR(5),
@@ -389,7 +390,7 @@ CREATE TABLE weather_code_translations (
     FOREIGN KEY (code_id) REFERENCES weather_codes(code_id)
 );
 -- Alerts
-CREATE TABLE weather_alerts (
+CREATE TABLE IF NOT EXISTS weather_alerts (
     alert_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     location_id INT NOT NULL,
@@ -410,7 +411,7 @@ CREATE TABLE weather_alerts (
     FOREIGN KEY (parameter_id) REFERENCES weather_parameters(parameter_id)
 );
 
-CREATE TABLE alert_notifications (
+CREATE TABLE IF NOT EXISTS alert_notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
     alert_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -426,7 +427,7 @@ CREATE TABLE alert_notifications (
 );
 
 -- Systems, Queries, AI
-CREATE TABLE weather_analysis (
+CREATE TABLE IF NOT EXISTS weather_analysis (
     analysis_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     location_id INT NOT NULL,
@@ -446,7 +447,7 @@ CREATE TABLE weather_analysis (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
-CREATE TABLE user_queries (
+CREATE TABLE IF NOT EXISTS user_queries (
     query_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     location_id INT,
@@ -466,7 +467,7 @@ CREATE TABLE user_queries (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
-CREATE TABLE api_requests (
+CREATE TABLE IF NOT EXISTS api_requests (
     request_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
     location_id INT,
@@ -485,7 +486,7 @@ CREATE TABLE api_requests (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
-CREATE TABLE system_config (
+CREATE TABLE IF NOT EXISTS system_config (
     config_id INT AUTO_INCREMENT PRIMARY KEY,
     config_key VARCHAR(100) NOT NULL UNIQUE,
     config_value TEXT,
@@ -496,7 +497,7 @@ CREATE TABLE system_config (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE data_quality_metrics (
+CREATE TABLE IF NOT EXISTS data_quality_metrics (
     metric_id INT AUTO_INCREMENT PRIMARY KEY,
     model_id INT NOT NULL,
     parameter_id INT NOT NULL,

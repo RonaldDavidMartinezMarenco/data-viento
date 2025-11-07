@@ -1,0 +1,24 @@
+services:
+  server:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+    environment:
+      - DB_HOST=mysql
+      - DB_PASSWORD=password
+      - DB_NAME=data_viento_database
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: data_viento_database
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+volumes:
+  db_data:
