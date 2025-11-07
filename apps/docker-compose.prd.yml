@@ -1,28 +1,33 @@
 services:
   server:
+    container_name: app-dataviento-server
     build: ./server
-    ports:
-      - "8000:8000"
     volumes:
       - ./server/src:/app/src
     environment:
       - DB_HOST=mysql
       - DB_PASSWORD=password
       - DB_NAME=data_viento_database
+    networks:
+      - cf_tunnel
   mysql:
+    container_name: app-dataviento-mysql
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: data_viento_database
     ports:
-      - "3306:3306"
+      - "13306:3306"
     volumes:
       - db_data:/var/lib/mysql
       - ./server/db:/docker-entrypoint-initdb.d
   web:
+    container_name: app-dataviento-web
     build: ./web
-    container_name: caddy_server
-    ports:
-      - "8001:80"
+    networks:
+      - cf_tunnel
 volumes:
   db_data:
+networks:
+  cf_tunnel:
+    external: true
