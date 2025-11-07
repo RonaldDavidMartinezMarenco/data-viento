@@ -153,7 +153,115 @@
                         </div>
                     </div>
                 </section>
-                
+
+                 <!-- Settings Section -->
+                <section class="settings-section">
+                    <h3>⚙️ Account Settings</h3>
+                    
+                    <!-- Location Management -->
+                    <div class="settings-group">
+                        <h4>📍 Favorite Locations</h4>
+                        <p class="settings-description">
+                            Select your favorite locations from the available cities. You can add up to 10 locations.
+                        </p>
+                        
+                        <!-- Available Locations Dropdown -->
+                        <div class="form-group">
+                            <label for="locationSelect">Add Location:</label>
+                            <select id="locationSelect" class="form-control">
+                                <option value="">-- Select a city --</option>
+                            </select>
+                            <div style="margin-top: 10px;">
+                                <label for="customLocationName">Custom Name (optional):</label>
+                                <input 
+                                    type="text" 
+                                    id="customLocationName" 
+                                    class="form-control" 
+                                    placeholder="e.g., Home, Work, Beach House..."
+                                    maxlength="50"
+                                >
+                                <small style="color: #718096; font-size: 0.85rem;">
+                                    Leave empty to use city name
+                                </small>
+                            </div>
+                            <button id="addLocationBtn" class="btn btn-primary" style="margin-top: 10px;">
+                                Add Location
+                            </button>
+                        </div>
+                        
+                        <!-- User's Current Locations -->
+                        <div class="user-locations">
+                            <h5>Your Locations:</h5>
+                            <div id="userLocationsList" class="locations-list">
+                                <p class="loading-text">Loading locations...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Unit Preferences -->
+                    <div class="settings-group">
+                        <h4>📏 Unit Preferences</h4>
+                        <p class="settings-description">
+                            Choose your preferred units for displaying weather data.
+                        </p>
+                        
+                        <div class="form-group">
+                            <label>Temperature Unit:</label>
+                            <div class="toggle-group">
+                                <button id="tempCelsius" class="toggle-btn active">
+                                    Celsius (°C)
+                                </button>
+                                <button id="tempFahrenheit" class="toggle-btn">
+                                    Fahrenheit (°F)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Wind Speed Unit:</label>
+                            <div class="toggle-group">
+                                <button id="windKmh" class="toggle-btn active">
+                                    km/h
+                                </button>
+                                <button id="windMph" class="toggle-btn">
+                                    mph
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Precipitation Unit:</label>
+                            <div class="toggle-group">
+                                <button id="precipMm" class="toggle-btn active">
+                                    Millimeters (mm)
+                                </button>
+                                <button id="precipInch" class="toggle-btn">
+                                    Inches (in)
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button id="savePreferencesBtn" class="btn btn-primary" style="margin-top: 15px;">
+                            💾 Save Preferences
+                        </button>
+                    </div>
+                    
+                    <!-- Notification Settings -->
+                    <div class="settings-group">
+                        <h4>🔔 Notifications</h4>
+                        <p class="settings-description">
+                            Enable or disable weather notifications.
+                        </p>
+                        
+                        <div class="form-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="notificationToggle">
+                                <span>Enable weather notifications</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Token Info (for debugging) -->
                 <section class="token-section">
                     <h3>Session Information</h3>
@@ -177,5 +285,6 @@
     <!-- Scripts -->
     <script src="/js/auth.js"></script>
     <script src="/js/dashboard.js"></script>
+    <script src="/js/settings.js"></script>
 </body>
 </html>

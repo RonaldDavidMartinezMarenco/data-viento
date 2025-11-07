@@ -184,3 +184,72 @@ class LocationService(BaseService):
             return dict(zip(columns, result[0]))
         
         return None
+    
+    def get_available_locations(self) -> list[Dict[str, Any]]:
+        """
+        Get all available default locations for user selection
+        
+        Returns only the 10 pre-configured locations (IDs 1-10)
+        that users can add to their favorites.
+        
+        Returns:
+            list: List of available locations with:
+                - location_id: Unique ID
+                - name: Location name (e.g., "Madrid")
+                - latitude: Latitude coordinate
+                - longitude: Longitude coordinate
+                - country: Country code (e.g., "ES")
+                - country_name: Full country name (e.g., "Spain")
+                - timezone: Timezone (e.g., "Europe/Madrid")
+        
+        Example Response:
+            [
+                {
+                    "location_id": 1,
+                    "name": "Madrid",
+                    "latitude": 40.4168,
+                    "longitude": -3.7038,
+                    "country": "ES",
+                    "country_name": "Spain",
+                    "timezone": "Europe/Madrid"
+                },
+                ...
+            ]
+        """
+        
+        self.logger.info("Fetching available default locations (IDs 1-10)")
+        query = """
+        SELECT 
+            location_id,
+            name,
+            latitude,
+            longitude,
+            country,
+            country_name,
+            timezone
+        FROM locations
+        WHERE location_id BETWEEN 1 AND 10
+        ORDER BY location_id ASC
+        """
+        
+        results = self.db.execute_query(query)
+        
+        if not results:
+            self.logger.warning("No default locations found in database")
+            return []
+        
+        locations = []
+        
+        for row in results:
+            locations.append({
+                'location_id': row[0],
+                'name': row[1],
+                'latitude': row[2],
+                'longitude': row[3],
+                'country': row[4],
+                'country_name': row[5],
+                'timezone': row[6]
+            })
+        
+        self.logger.info(f"Found {len(locations)} default locations")
+        return locations

@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.routes import auth_routes, user_routes
+from src.routes import auth_routes, user_routes, location_routes
 
 
 # Create FastAPI app
@@ -34,6 +34,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
+app.include_router(location_routes.router)
 
 
 @app.get("/")
