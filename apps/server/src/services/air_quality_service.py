@@ -22,6 +22,7 @@ from src.services.base_service import BaseService
 from src.services.location_service import LocationService
 from src.models.air_quality_models import AirQualityResponse
 from src.db.database import DatabaseConnection
+from datetime import datetime
 
 
 class AirQualityService(BaseService):
@@ -380,6 +381,288 @@ class AirQualityService(BaseService):
         rows_inserted = self.db.execute_bulk_insert(insert_query, rows)
         
         return rows_inserted
+    
+    
+    def get_current_air_quality(self, location_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get current air quality for a location
+        
+        Args:
+            location_id: Location ID
+        
+        Returns:
+            Dictionary with current air quality data or None
+        
+        Example:
+            >>> service = AirQualityService()
+            >>> current = service.get_current_air_quality(location_id=1)
+            >>> print(current['pm2_5'])
+            12.5
+        """
+        
+        query = """
+        SELECT 
+            aqc.air_quality_current_id,
+            aqc.location_id,
+            aqc.observation_time,
+            aqc.pm2_5,
+            aqc.pm10,
+            aqc.european_aqi,
+            aqc.us_aqi,
+            aqc.nitrogen_dioxide,
+            aqc.ozone,
+            aqc.sulphur_dioxide,
+            aqc.carbon_monoxide,
+            aqc.dust,
+            aqc.ammonia,
+            aqc.updated_at
+        FROM air_quality_current aqc
+        WHERE aqc.location_id = %s
+        ORDER BY aqc.observation_time DESC
+        LIMIT 1
+        """
+        
+        try:
+            result = self.db.execute_query(query, (location_id,))
+            
+            if not result:
+                self.logger.warning(f"No current air quality found for location {location_id}")
+                return None
+            
+            row = result[0]
+            
+            return {
+                "air_quality_current_id": row[0],
+                "location_id": row[1],
+                "observation_time": row[2].isoformat() if row[2] else None,
+                "pm2_5": float(row[3]) if row[3] is not None else None,
+                "pm10": float(row[4]) if row[4] is not None else None,
+                "european_aqi": row[5],
+                "us_aqi": row[6],
+                "nitrogen_dioxide": float(row[7]) if row[7] is not None else None,
+                "ozone": float(row[8]) if row[8] is not None else None,
+                "sulphur_dioxide": float(row[9]) if row[9] is not None else None,
+                "carbon_monoxide": float(row[10]) if row[10] is not None else None,
+                "dust": float(row[11]) if row[11] is not None else None,
+                "ammonia": float(row[12]) if row[12] is not None else None,
+                "updated_at": row[13].isoformat() if row[13] else None,
+            }
+        
+        except Exception as e:
+            self._log_db_error("get_current_air_quality", e)
+            return None
+
+
+    def get_hourly_air_quality(
+        self,
+        location_id: int,
+        hours: int = 24,
+        parameters: Optional[list] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get hourly air quality forecast for a location
+        
+        Args:
+            location_id: Location ID
+            hours: Number of forecast hours (default: 24)
+            parameters: List of parameter codes (default: all AQ params)
+        
+        Returns:
+            Dictionary with hourly air quality data structured by parameter
+        
+        Example:
+            >>> service = AirQualityService()
+            >>> hourly = service.get_hourly_air_quality(
+            ...     location_id=1,
+            ...     hours=24,
+            ...     parameters=['pm2_5', 'pm10', 'aqi_european']
+            ... )
+            >>> print(hourly['parameters']['pm2_5']['values'])
+            [12.5, 13.2, 14.1, ...]
+        """
+        
+        # Default parameters if none specified
+        if parameters is None:
+            parameters = [
+                'pm2_5',
+                'pm10',
+                'aqi_european',
+                'aqi_us',
+                'no2',
+                'o3',
+                'so2',
+                'co'
+            ]
+        
+        try:
+            # Step 1: Get the latest forecast batch for this location
+            forecast_query = """
+            SELECT air_quality_id, forecast_reference_time, model_id
+            FROM air_quality_forecasts
+            WHERE location_id = %s
+            ORDER BY forecast_reference_time DESC
+            LIMIT 1
+            """
+            
+            forecast_result = self.db.execute_query(forecast_query, (location_id,))
+            
+            if not forecast_result:
+                self.logger.warning(f"No air quality forecast batch found for location {location_id}")
+                return None
+            
+            forecast_id = forecast_result[0][0]
+            forecast_time = forecast_result[0][1]
+            model_id = forecast_result[0][2]
+            
+            # Step 2: Get parameter IDs
+            placeholders = ','.join(['%s'] * len(parameters))
+            param_query = f"""
+            SELECT parameter_id, parameter_code, parameter_name, unit
+            FROM weather_parameters
+            WHERE parameter_code IN ({placeholders})
+                AND api_endpoint = 'air_quality'
+            """
+            
+            param_results = self.db.execute_query(param_query, parameters)
+            
+            if not param_results:
+                self.logger.warning(f"No parameters found for codes: {parameters}")
+                return None
+            
+            # Map parameter_id to parameter_code
+            param_map = {row[0]: row[1] for row in param_results}
+            param_names = {row[0]: row[2] for row in param_results}
+            param_units = {row[0]: row[3] for row in param_results}
+            
+            # Step 3: Get air quality data for all parameters
+            param_ids = list(param_map.keys())
+            param_placeholders = ','.join(['%s'] * len(param_ids))
+            
+            data_query = f"""
+            SELECT 
+                aqd.parameter_id,
+                aqd.valid_time,
+                aqd.value,
+                aqd.unit,
+                aqd.aqi_category,
+                aqd.health_impact
+            FROM air_quality_data aqd
+            WHERE aqd.air_quality_id = %s
+                AND aqd.parameter_id IN ({param_placeholders})
+                AND aqd.valid_time >= NOW()
+                AND aqd.valid_time < DATE_ADD(NOW(), INTERVAL %s HOUR)
+            ORDER BY aqd.parameter_id, aqd.valid_time ASC
+            """
+            
+            query_params = [forecast_id] + param_ids + [hours]
+            data_results = self.db.execute_query(data_query, query_params)
+            
+            if not data_results:
+                self.logger.warning(f"No air quality data found for forecast_id {forecast_id}")
+                return None
+            
+            # Step 4: Structure data by parameter
+            result = {
+                "air_quality_id": forecast_id,
+                "location_id": location_id,
+                "model_id": model_id,
+                "forecast_reference_time": forecast_time.isoformat() if forecast_time else None,
+                "parameters": {}
+            }
+            
+            # Group data by parameter_id
+            for row in data_results:
+                parameter_id = row[0]
+                valid_time = row[1]
+                value = row[2]
+                unit = row[3]
+                aqi_category = row[4]
+                health_impact = row[5]
+                
+                param_code = param_map.get(parameter_id)
+                
+                if param_code not in result["parameters"]:
+                    result["parameters"][param_code] = {
+                        "name": param_names.get(parameter_id),
+                        "unit": param_units.get(parameter_id),
+                        "times": [],
+                        "values": [],
+                        "categories": [],
+                        "health_impacts": []
+                    }
+                
+                result["parameters"][param_code]["times"].append(
+                    valid_time.isoformat() if valid_time else None
+                )
+                result["parameters"][param_code]["values"].append(
+                    float(value) if value is not None else None
+                )
+                result["parameters"][param_code]["categories"].append(aqi_category)
+                result["parameters"][param_code]["health_impacts"].append(health_impact)
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_hourly_air_quality", e)
+            return None
+
+
+    def get_all_air_quality_data(
+        self,
+        location_id: int,
+        hours: int = 24
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get all air quality data for a location (current + hourly)
+        
+        This is the main method used by the /air-quality/all API endpoint
+        
+        Args:
+            location_id: Location ID
+            hours: Number of forecast hours (default: 24)
+        
+        Returns:
+            Dictionary with all air quality data
+        
+        Example:
+            >>> service = AirQualityService()
+            >>> air_quality = service.get_all_air_quality_data(location_id=1)
+            >>> print(air_quality['current']['pm2_5'])
+            12.5
+            >>> print(len(air_quality['hourly']['parameters']['pm2_5']['values']))
+            24
+        """
+        
+        try:
+            result = {
+                "success": True,
+                "location_id": location_id,
+                "current": None,
+                "hourly": None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Fetch current air quality
+            current = self.get_current_air_quality(location_id)
+            if current:
+                result["current"] = current
+            
+            # Fetch hourly forecast
+            hourly = self.get_hourly_air_quality(location_id, hours=hours)
+            if hourly:
+                result["hourly"] = hourly
+            
+            # Check if we got any data
+            if not current and not hourly:
+                self.logger.warning(f"No air quality data found for location {location_id}")
+                return None
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_all_air_quality_data", e)
+            return None
+
     
     def cleanup_old_forecasts(self, days_to_keep: int = 7) -> int:
         """

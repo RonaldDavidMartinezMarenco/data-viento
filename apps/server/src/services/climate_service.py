@@ -22,7 +22,7 @@ from src.services.base_service import BaseService
 from src.services.location_service import LocationService
 from src.models.climate_models import ClimateResponse
 from src.db.database import DatabaseConnection
-
+from datetime import datetime
 
 class ClimateService(BaseService):
     """
@@ -534,7 +534,7 @@ class ClimateService(BaseService):
             self._log_db_error("save_daily_climate_data", e)
             return False
         
-    def get_climate_data(
+    def get_climate_projection(
         self,
         location_id: int,
         model_code: str,
@@ -542,7 +542,7 @@ class ClimateService(BaseService):
         end_date: str
     ) -> Optional[Dict[str, Any]]:
         """
-        Get climate data for a location, model, and date range
+        Get climate projection data for a location, model, and date range
         
         Args:
             location_id: Location ID
@@ -553,33 +553,37 @@ class ClimateService(BaseService):
         Returns:
             Dictionary with climate projection and daily data, or None
         
-        Example Output:
-            {
-                'climate_id': 1,
-                'location_id': 1,
-                'model_code': 'CMCC_CM2_VHR4',
-                'start_date': '2050-01-01',
-                'end_date': '2050-12-31',
-                'total_days': 365,
-                'daily_data': [
-                    {
-                        'valid_date': '2050-01-01',
-                        'temperature_2m_max': 15.2,
-                        'temperature_2m_min': 5.8,
-                        'precipitation_sum': 2.5,
-                        ...
-                    },
-                    ...
-                ]
-            }
+        Example:
+            >>> service = ClimateService()
+            >>> projection = service.get_climate_projection(
+            ...     location_id=1,
+            ...     model_code='CMCC_CM2_VHR4',
+            ...     start_date='2050-01-01',
+            ...     end_date='2050-12-31'
+            ... )
+            >>> print(projection['total_days'])
+            365
+            >>> print(len(projection['daily_data']))
+            365
         """
         
         try:
-            # Get climate projection
+            # Get climate projection metadata
             projection_query = """
-            SELECT cp.climate_id, cp.start_date, cp.end_date,
-                   cp.disable_bias_correction, cp.cell_selection,
-                   wm.model_code, wm.model_name
+            SELECT 
+                cp.climate_id,
+                cp.start_date,
+                cp.end_date,
+                cp.disable_bias_correction,
+                cp.cell_selection,
+                cp.generation_time_ms,
+                cp.timezone,
+                cp.utc_offset_seconds,
+                cp.created_at,
+                wm.model_code,
+                wm.model_name,
+                wm.provider,
+                wm.provider_country
             FROM climate_projections cp
             JOIN weather_models wm ON cp.model_id = wm.model_id
             WHERE cp.location_id = %s 
@@ -594,63 +598,192 @@ class ClimateService(BaseService):
             )
             
             if not projection:
+                self.logger.warning(
+                    f"No climate projection found for location {location_id}, "
+                    f"model {model_code}, {start_date} to {end_date}"
+                )
                 return None
             
-            climate_id = projection[0][0]
+            row = projection[0]
+            climate_id = row[0]
             
-            # Get daily data
+            # Get daily climate data
             daily_query = """
-            SELECT valid_date,
-                   temperature_2m_max, temperature_2m_min, temperature_2m_mean,
-                   precipitation_sum, rain_sum, snowfall_sum,
-                   relative_humidity_2m_max, relative_humidity_2m_min, relative_humidity_2m_mean,
-                   wind_speed_10m_mean, wind_speed_10m_max,
-                   pressure_msl_mean, cloud_cover_mean,
-                   shortwave_radiation_sum, soil_moisture_0_to_10cm_mean
+            SELECT 
+                valid_date,
+                temperature_2m_max,
+                temperature_2m_min,
+                temperature_2m_mean,
+                precipitation_sum,
+                rain_sum,
+                snowfall_sum,
+                relative_humidity_2m_max,
+                relative_humidity_2m_min,
+                relative_humidity_2m_mean,
+                wind_speed_10m_mean,
+                wind_speed_10m_max,
+                pressure_msl_mean,
+                cloud_cover_mean,
+                shortwave_radiation_sum,
+                soil_moisture_0_to_10cm_mean
             FROM climate_daily
             WHERE climate_id = %s
-            ORDER BY valid_date
+            ORDER BY valid_date ASC
             """
             
             daily_results = self.db.execute_query(daily_query, (climate_id,))
             
             daily_data = []
-            for row in daily_results:
+            for daily_row in daily_results:
                 daily_data.append({
-                    'valid_date': row[0],
-                    'temperature_2m_max': float(row[1]) if row[1] else None,
-                    'temperature_2m_min': float(row[2]) if row[2] else None,
-                    'temperature_2m_mean': float(row[3]) if row[3] else None,
-                    'precipitation_sum': float(row[4]) if row[4] else None,
-                    'rain_sum': float(row[5]) if row[5] else None,
-                    'snowfall_sum': float(row[6]) if row[6] else None,
-                    'relative_humidity_2m_max': float(row[7]) if row[7] else None,
-                    'relative_humidity_2m_min': float(row[8]) if row[8] else None,
-                    'relative_humidity_2m_mean': float(row[9]) if row[9] else None,
-                    'wind_speed_10m_mean': float(row[10]) if row[10] else None,
-                    'wind_speed_10m_max': float(row[11]) if row[11] else None,
-                    'pressure_msl_mean': float(row[12]) if row[12] else None,
-                    'cloud_cover_mean': float(row[13]) if row[13] else None,
-                    'shortwave_radiation_sum': float(row[14]) if row[14] else None,
-                    'soil_moisture_0_to_10cm_mean': float(row[15]) if row[15] else None,
+                    'valid_date': daily_row[0].isoformat() if daily_row[0] else None,
+                    'temperature_2m_max': float(daily_row[1]) if daily_row[1] is not None else None,
+                    'temperature_2m_min': float(daily_row[2]) if daily_row[2] is not None else None,
+                    'temperature_2m_mean': float(daily_row[3]) if daily_row[3] is not None else None,
+                    'precipitation_sum': float(daily_row[4]) if daily_row[4] is not None else None,
+                    'rain_sum': float(daily_row[5]) if daily_row[5] is not None else None,
+                    'snowfall_sum': float(daily_row[6]) if daily_row[6] is not None else None,
+                    'relative_humidity_2m_max': float(daily_row[7]) if daily_row[7] is not None else None,
+                    'relative_humidity_2m_min': float(daily_row[8]) if daily_row[8] is not None else None,
+                    'relative_humidity_2m_mean': float(daily_row[9]) if daily_row[9] is not None else None,
+                    'wind_speed_10m_mean': float(daily_row[10]) if daily_row[10] is not None else None,
+                    'wind_speed_10m_max': float(daily_row[11]) if daily_row[11] is not None else None,
+                    'pressure_msl_mean': float(daily_row[12]) if daily_row[12] is not None else None,
+                    'cloud_cover_mean': float(daily_row[13]) if daily_row[13] is not None else None,
+                    'shortwave_radiation_sum': float(daily_row[14]) if daily_row[14] is not None else None,
+                    'soil_moisture_0_to_10cm_mean': float(daily_row[15]) if daily_row[15] is not None else None,
                 })
             
             return {
                 'climate_id': climate_id,
                 'location_id': location_id,
-                'model_code': projection[0][5],
-                'model_name': projection[0][6],
-                'start_date': projection[0][1],
-                'end_date': projection[0][2],
-                'disable_bias_correction': projection[0][3],
-                'cell_selection': projection[0][4],
+                'model_code': row[9],
+                'model_name': row[10],
+                'provider': row[11],
+                'provider_country': row[12],
+                'start_date': row[1].isoformat() if row[1] else None,
+                'end_date': row[2].isoformat() if row[2] else None,
+                'disable_bias_correction': bool(row[3]),
+                'cell_selection': row[4],
+                'generation_time_ms': float(row[5]) if row[5] is not None else None,
+                'timezone': row[6],
+                'utc_offset_seconds': row[7],
+                'created_at': row[8].isoformat() if row[8] else None,
                 'total_days': len(daily_data),
                 'daily_data': daily_data
             }
         
         except Exception as e:
-            self._log_db_error("get_climate_data", e)
+            self._log_db_error("get_climate_projection", e)
             return None
+
+
+    def get_all_climate_data(
+        self,
+        location_id: int,
+        model_code: str = 'EC_Earth3P_HR',
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get all climate data for a location
+        
+        This is the main method used by the /climate/all API endpoint
+        
+        Args:
+            location_id: Location ID
+            model_code: Climate model code (default: 'EC_Earth3P_HR')
+            start_date: Start date (YYYY-MM-DD) - if None, gets most recent
+            end_date: End date (YYYY-MM-DD) - if None, gets most recent
+        
+        Returns:
+            Dictionary with all climate data
+        
+        Example:
+            >>> service = ClimateService()
+            >>> # Get specific projection
+            >>> climate = service.get_all_climate_data(
+            ...     location_id=1,
+            ...     model_code='CMCC_CM2_VHR4',
+            ...     start_date='2050-01-01',
+            ...     end_date='2050-12-31'
+            ... )
+            >>> 
+            >>> # Get most recent projection (any date range)
+            >>> climate = service.get_all_climate_data(location_id=1)
+        """
+        
+        try:
+            
+            
+            # If no dates provided, get the most recent projection
+            if not start_date or not end_date:
+                recent_query = """
+                SELECT cp.start_date, cp.end_date, wm.model_code
+                FROM climate_projections cp
+                JOIN weather_models wm ON cp.model_id = wm.model_id
+                WHERE cp.location_id = %s
+                ORDER BY cp.created_at DESC
+                LIMIT 1
+                """
+                
+                recent_result = self.db.execute_query(recent_query, (location_id,))
+                
+                if not recent_result:
+                    self.logger.warning(f"No climate projections found for location {location_id}")
+                    return None
+                
+                start_date = recent_result[0][0].isoformat() if recent_result[0][0] else None
+                end_date = recent_result[0][1].isoformat() if recent_result[0][1] else None
+                model_code = recent_result[0][2]
+            
+            result = {
+                "success": True,
+                "location_id": location_id,
+                "projection": None,
+                "statistics": None,
+                "available_projections": None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Fetch projection data
+            projection = self.get_climate_projection(
+                location_id=location_id,
+                model_code=model_code,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            if projection:
+                result["projection"] = projection
+            
+            # Get statistics for this projection
+            statistics = self.get_climate_statistics(
+                location_id=location_id,
+                model_code=model_code,
+                start_date=start_date,
+                end_date=end_date
+            )
+            
+            if statistics:
+                result["statistics"] = statistics
+            
+            # List all available projections for this location
+            available = self.list_available_projections(location_id)
+            if available:
+                result["available_projections"] = available
+            
+            # Check if we got any data
+            if not projection:
+                self.logger.warning(f"No climate data found for location {location_id}")
+                return None
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_all_climate_data", e)
+            return None
+        
     def get_climate_statistics(
         self,
         location_id: int,

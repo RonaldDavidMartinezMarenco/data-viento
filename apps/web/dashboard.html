@@ -13,6 +13,7 @@
     <!-- Styles - FIXED: Use only existing CSS files -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/charts.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -246,21 +247,40 @@
                     </div>
                 </section>
 
+                <!-- Find this section and REPLACE it: -->
                 <section id="section-weather" class="content-section">
                     <h2>⛅ Weather Forecast</h2>
                     <p class="section-description">Current weather and 7-day forecast data</p>
                     
+                    <!-- ✅ NEW: Current Weather Card (will be populated by JS) -->
+                    <div id="currentWeatherCard" class="current-weather-card">
+                        <div class="loading-spinner">Loading current weather...</div>
+                    </div>
+                    
+                    <!-- ✅ NEW: Charts Grid with 5 charts -->
                     <div class="charts-grid">
-                        <div class="chart-container">
-                            <h3>Temperature Forecast (7 days)</h3>
-                            <canvas id="weatherTempChart"></canvas>
+                        <!-- Chart 1: Temperature (7 days) -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌡️ Temperature Forecast (7 Days)</h3>
+                                <p class="chart-subtitle">Daily max, mean, and min temperatures</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherTempChart"></canvas>
+                            </div>
                         </div>
                         
-                        <div class="chart-container">
-                            <h3>Wind Speed (24 hours)</h3>
-                            <canvas id="weatherWindChart"></canvas>
+                        <!-- Chart 2: Wind Speed (24 hours) -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>💨 Wind Speed (24 Hours)</h3>
+                                <p class="chart-subtitle">Hourly wind speed and gusts</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherWindChart"></canvas>
+                            </div>
                         </div>
-                    </div>
+                        
                 </section>
                 
                 <!-- Air Quality Section -->
@@ -446,8 +466,8 @@
     
     <!-- Scripts -->
     <script src="/js/auth.js"></script>
-    <script src="/js/dashboard.js"></script>
+    <script src="/js/weather-charts.js"></script>
     <script src="/js/settings.js"></script>
-    <script src="/js/weather-charts.js"></script> 
+    <script src="/js/dashboard.js"></script>
 </body>
 </html>

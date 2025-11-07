@@ -27,6 +27,7 @@ from src.services.base_service import BaseService
 from src.services.location_service import LocationService
 from src.models.satellite_models import SatelliteResponse
 from src.db.database import DatabaseConnection
+from datetime import datetime
 
 
 class SatelliteService(BaseService):
@@ -428,6 +429,239 @@ class SatelliteService(BaseService):
             self._log_db_error("save_satellite_data", e)
             return False
         
+        
+    def get_daily_satellite_radiation(
+        self,
+        location_id: int,
+        days: int = 7
+    ) -> Optional[list]:
+        """
+        Get daily satellite radiation data for a location
+        
+        Args:
+            location_id: Location ID
+            days: Number of days to retrieve (default: 7, max: 365)
+        
+        Returns:
+            List of dictionaries with daily radiation data or None
+        
+        Example:
+            >>> service = SatelliteService()
+            >>> daily = service.get_daily_satellite_radiation(location_id=1, days=7)
+            >>> print(f"Found {len(daily)} radiation records")
+            >>> print(daily[0]['shortwave_radiation'])
+            245.5
+        """
+        
+        query = """
+        SELECT 
+            srd.radiation_id,
+            srd.location_id,
+            srd.model_id,
+            srd.valid_date,
+            srd.shortwave_radiation,
+            srd.direct_radiation,
+            srd.diffuse_radiation,
+            srd.direct_normal_irradiance,
+            srd.global_tilted_irradiance,
+            srd.terrestrial_radiation,
+            srd.panel_tilt_angle,
+            srd.panel_azimuth_angle,
+            srd.quality_flag,
+            srd.created_at,
+            wm.model_name,
+            wm.model_code
+        FROM satellite_radiation_daily srd
+        LEFT JOIN weather_models wm ON srd.model_id = wm.model_id
+        WHERE srd.location_id = %s
+            AND srd.valid_date >= CURDATE() - INTERVAL %s DAY
+            AND srd.valid_date <= CURDATE()
+        ORDER BY srd.valid_date DESC
+        """
+        
+        try:
+            results = self.db.execute_query(query, (location_id, days))
+            
+            if not results:
+                self.logger.warning(f"No satellite radiation data found for location {location_id}")
+                return None
+            
+            daily_data = []
+            for row in results:
+                daily_data.append({
+                    "radiation_id": row[0],
+                    "location_id": row[1],
+                    "model_id": row[2],
+                    "valid_date": row[3].isoformat() if row[3] else None,
+                    "shortwave_radiation": float(row[4]) if row[4] is not None else None,
+                    "direct_radiation": float(row[5]) if row[5] is not None else None,
+                    "diffuse_radiation": float(row[6]) if row[6] is not None else None,
+                    "direct_normal_irradiance": float(row[7]) if row[7] is not None else None,
+                    "global_tilted_irradiance": float(row[8]) if row[8] is not None else None,
+                    "terrestrial_radiation": float(row[9]) if row[9] is not None else None,
+                    "panel_tilt_angle": row[10],
+                    "panel_azimuth_angle": row[11],
+                    "quality_flag": row[12],
+                    "created_at": row[13].isoformat() if row[13] else None,
+                    "model_name": row[14],
+                    "model_code": row[15],
+                })
+            
+            return daily_data
+        
+        except Exception as e:
+            self._log_db_error("get_daily_satellite_radiation", e)
+            return None
+
+
+    def get_latest_satellite_radiation(self, location_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get the most recent satellite radiation data for a location
+        
+        This serves as a "current" endpoint since satellite data is daily
+        
+        Args:
+            location_id: Location ID
+        
+        Returns:
+            Dictionary with latest radiation data or None
+        
+        Example:
+            >>> service = SatelliteService()
+            >>> latest = service.get_latest_satellite_radiation(location_id=1)
+            >>> print(latest['shortwave_radiation'])
+            245.5
+            >>> print(latest['valid_date'])
+            2025-11-07
+        """
+        
+        query = """
+        SELECT 
+            srd.radiation_id,
+            srd.location_id,
+            srd.model_id,
+            srd.valid_date,
+            srd.shortwave_radiation,
+            srd.direct_radiation,
+            srd.diffuse_radiation,
+            srd.direct_normal_irradiance,
+            srd.global_tilted_irradiance,
+            srd.terrestrial_radiation,
+            srd.panel_tilt_angle,
+            srd.panel_azimuth_angle,
+            srd.quality_flag,
+            srd.created_at,
+            wm.model_name,
+            wm.model_code
+        FROM satellite_radiation_daily srd
+        LEFT JOIN weather_models wm ON srd.model_id = wm.model_id
+        WHERE srd.location_id = %s
+        ORDER BY srd.valid_date DESC
+        LIMIT 1
+        """
+        
+        try:
+            result = self.db.execute_query(query, (location_id,))
+            
+            if not result:
+                self.logger.warning(f"No satellite radiation data found for location {location_id}")
+                return None
+            
+            row = result[0]
+            
+            return {
+                "radiation_id": row[0],
+                "location_id": row[1],
+                "model_id": row[2],
+                "valid_date": row[3].isoformat() if row[3] else None,
+                "shortwave_radiation": float(row[4]) if row[4] is not None else None,
+                "direct_radiation": float(row[5]) if row[5] is not None else None,
+                "diffuse_radiation": float(row[6]) if row[6] is not None else None,
+                "direct_normal_irradiance": float(row[7]) if row[7] is not None else None,
+                "global_tilted_irradiance": float(row[8]) if row[8] is not None else None,
+                "terrestrial_radiation": float(row[9]) if row[9] is not None else None,
+                "panel_tilt_angle": row[10],
+                "panel_azimuth_angle": row[11],
+                "quality_flag": row[12],
+                "created_at": row[13].isoformat() if row[13] else None,
+                "model_name": row[14],
+                "model_code": row[15],
+            }
+        
+        except Exception as e:
+            self._log_db_error("get_latest_satellite_radiation", e)
+            return None
+
+
+    def get_all_satellite_data(
+        self,
+        location_id: int,
+        days: int = 7
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get all satellite radiation data for a location (latest + daily history)
+        
+        This is the main method used by the /satellite/all API endpoint
+        
+        Args:
+            location_id: Location ID
+            days: Number of days to retrieve (default: 7)
+        
+        Returns:
+            Dictionary with all satellite data
+        
+        Example:
+            >>> service = SatelliteService()
+            >>> satellite = service.get_all_satellite_data(location_id=1)
+            >>> print(satellite['latest']['shortwave_radiation'])
+            245.5
+            >>> print(len(satellite['daily']))
+            7
+        """
+        
+        try:
+            
+            
+            result = {
+                "success": True,
+                "location_id": location_id,
+                "latest": None,
+                "daily": None,
+                "statistics": None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Fetch latest radiation data (serves as "current")
+            latest = self.get_latest_satellite_radiation(location_id)
+            if latest:
+                result["latest"] = latest
+            
+            # Fetch daily history
+            daily = self.get_daily_satellite_radiation(location_id, days=days)
+            if daily:
+                result["daily"] = daily
+                result["daily_count"] = len(daily)
+            
+            # Get statistics for the period
+            statistics = self.get_satellite_statistics(
+                location_id=location_id,
+                start_date=None,  # Will use available data range
+                end_date=None
+            )
+            if statistics:
+                result["statistics"] = statistics
+            
+            # Check if we got any data
+            if not latest and not daily:
+                self.logger.warning(f"No satellite data found for location {location_id}")
+                return None
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_all_satellite_data", e)
+            return None
+        
     def get_satellite_statistics(
         self,
         location_id: int,
@@ -513,3 +747,6 @@ class SatelliteService(BaseService):
         except Exception as e:
             self._log_db_error("get_satellite_statistics", e)
             return None
+        
+        
+    

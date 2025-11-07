@@ -21,6 +21,7 @@ from src.services.base_service import BaseService
 from src.services.location_service import LocationService
 from src.models.weather_models import ForecastResponse
 from src.db.database import DatabaseConnection
+from datetime import datetime
 
 class WeatherService (BaseService):
     """
@@ -539,6 +540,388 @@ class WeatherService (BaseService):
         
         return rows_inserted
     
+    def get_current_weather(self, location_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get current weather for a location
+        
+        Args:
+            location_id: Location ID
+        
+        Returns:
+            Dictionary with current weather data or None
+        
+        Example:
+            >>> service = WeatherService()
+            >>> current = service.get_current_weather(location_id=1)
+            >>> print(current['temperature_2m'])
+            22.5
+        """
+        
+        query = """
+        SELECT 
+            cw.current_id,
+            cw.location_id,
+            cw.model_id,
+            cw.observation_time,
+            cw.temperature_2m,
+            cw.relative_humidity_2m,
+            cw.apparent_temperature,
+            cw.precipitation,
+            cw.weather_code,
+            cw.cloud_cover,
+            cw.wind_speed_10m,
+            cw.wind_direction_10m,
+            cw.created_at,
+            cw.updated_at,
+            wm.model_name,
+            wm.model_code
+        FROM current_weather cw
+        LEFT JOIN weather_models wm ON cw.model_id = wm.model_id
+        WHERE cw.location_id = %s
+        ORDER BY cw.observation_time DESC
+        LIMIT 1
+        """
+        try:
+            result = self.db.execute_query(query, (location_id,))
+            
+            if not result:
+                self.logger.warning(f"No current weather found for location {location_id}")
+                return None
+            
+            row = result[0]
+            
+            return {
+                "current_id": row[0],
+                "location_id": row[1],
+                "model_id": row[2],
+                "observation_time": row[3].isoformat() if row[3] else None,
+                "temperature_2m": float(row[4]) if row[4] is not None else None,
+                "relative_humidity_2m": float(row[5]) if row[5] is not None else None,
+                "apparent_temperature": float(row[6]) if row[6] is not None else None,
+                "precipitation": float(row[7]) if row[7] is not None else None,
+                "weather_code": row[8],
+                "cloud_cover": row[9],
+                "wind_speed_10m": float(row[10]) if row[10] is not None else None,
+                "wind_direction_10m": row[11],
+                "created_at": row[12].isoformat() if row[12] else None,
+                "updated_at": row[13].isoformat() if row[13] else None,
+                "model_name": row[14],
+                "model_code": row[15],
+            }
+        
+        except Exception as e:
+            self._log_db_error("get_current_weather", e)
+            return None
+        
+        
+    def get_daily_forecast(
+        self,
+        location_id: int,
+        days: int = 7
+    ) -> Optional[list]:
+        """
+        Get daily weather forecast for a location
+        
+        Args:
+            location_id: Location ID
+            days: Number of forecast days (default: 7, max: 16)
+        
+        Returns:
+            List of dictionaries with daily forecast data or None
+        
+        Example:
+            >>> service = WeatherService()
+            >>> daily = service.get_daily_forecast(location_id=1, days=7)
+            >>> print(f"Found {len(daily)} forecast days")
+            >>> print(daily[0]['temperature_2m_max'])
+            25.0
+        """
+        
+        query = """
+        SELECT 
+            wfd.forecast_day_id,
+            wfd.location_id,
+            wfd.model_id,
+            wfd.valid_date,
+            wfd.temperature_2m_max,
+            wfd.temperature_2m_min,
+            wfd.precipitation_sum,
+            wfd.precipitation_hours,
+            wfd.precipitation_probability_max,
+            wfd.weather_code,
+            wfd.sunrise,
+            wfd.sunset,
+            wfd.sunshine_duration,
+            wfd.uv_index_max,
+            wfd.wind_speed_10m_max,
+            wfd.wind_gusts_10m_max,
+            wfd.wind_direction_10m_dominant,
+            wfd.forecast_reference_time,
+            wfd.created_at,
+            wfd.updated_at,
+            wm.model_name,
+            wm.model_code
+        FROM weather_forecasts_daily wfd
+        LEFT JOIN weather_models wm ON wfd.model_id = wm.model_id
+        WHERE wfd.location_id = %s
+            AND wfd.valid_date >= CURDATE()
+            AND wfd.valid_date < DATE_ADD(CURDATE(), INTERVAL %s DAY)
+        ORDER BY wfd.valid_date ASC
+        """
+        
+        try:
+            results = self.db.execute_query(query, (location_id, days))
+            
+            if not results:
+                self.logger.warning(f"No daily forecast found for location {location_id}")
+                return None
+            
+            daily_data = []
+            for row in results:
+                daily_data.append({
+                    "forecast_day_id": row[0],
+                    "location_id": row[1],
+                    "model_id": row[2],
+                    "valid_date": row[3].isoformat() if row[3] else None,
+                    "temperature_2m_max": float(row[4]) if row[4] is not None else None,
+                    "temperature_2m_min": float(row[5]) if row[5] is not None else None,
+                    "precipitation_sum": float(row[6]) if row[6] is not None else None,
+                    "precipitation_hours": row[7],
+                    "precipitation_probability_max": row[8],
+                    "weather_code": row[9],
+                    "sunrise": row[10].isoformat() if row[10] else None,
+                    "sunset": row[11].isoformat() if row[11] else None,
+                    "sunshine_duration": row[12],
+                    "uv_index_max": row[13],
+                    "wind_speed_10m_max": float(row[14]) if row[14] is not None else None,
+                    "wind_gusts_10m_max": float(row[15]) if row[15] is not None else None,
+                    "wind_direction_10m_dominant": row[16],
+                    "forecast_reference_time": row[17].isoformat() if row[17] else None,
+                    "created_at": row[18].isoformat() if row[18] else None,
+                    "updated_at": row[19].isoformat() if row[19] else None,
+                    "model_name": row[20],
+                    "model_code": row[21],
+                })
+            
+            return daily_data
+        
+        except Exception as e:
+            self._log_db_error("get_daily_forecast", e)
+            return None
+        
+    def get_hourly_forecast(
+        self,
+        location_id: int,
+        hours: int = 24,
+        parameters: Optional[list] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get hourly weather forecast for a location
+        
+        Args:
+            location_id: Location ID
+            hours: Number of forecast hours (default: 24)
+            parameters: List of parameter codes to fetch (default: common weather params)
+        
+        Returns:
+            Dictionary with hourly forecast data structured by parameter
+        
+        Example:
+            >>> service = WeatherService()
+            >>> hourly = service.get_hourly_forecast(
+            ...     location_id=1,
+            ...     hours=24,
+            ...     parameters=['temp_2m', 'wind_speed_10m']
+            ... )
+            >>> print(hourly.keys())
+            dict_keys(['temp_2m', 'wind_speed_10m', 'times'])
+            >>> print(hourly['temp_2m'])
+            [22.5, 23.1, 23.8, ...]
+        """
+        
+        # Default parameters if none specified
+        if parameters is None:
+            parameters = [
+                'temp_2m',
+                'humidity_2m',
+                'wind_speed_10m',
+                'wind_dir_10m',
+                'precip',
+                'precip_prob',
+                'weather_code'
+            ]
+        
+        try:
+            # Step 1: Get the latest forecast batch for this location
+            forecast_query = """
+            SELECT forecast_id, forecast_reference_time
+            FROM weather_forecasts
+            WHERE location_id = %s
+            ORDER BY forecast_reference_time DESC
+            LIMIT 1
+            """
+            
+            forecast_result = self.db.execute_query(forecast_query, (location_id,))
+            
+            if not forecast_result:
+                self.logger.warning(f"No forecast batch found for location {location_id}")
+                return None
+            
+            forecast_id = forecast_result[0][0]
+            forecast_time = forecast_result[0][1]
+            
+            # Step 2: Get parameter IDs
+            placeholders = ','.join(['%s'] * len(parameters))
+            param_query = f"""
+            SELECT parameter_id, parameter_code, parameter_name, unit
+            FROM weather_parameters
+            WHERE parameter_code IN ({placeholders})
+                AND api_endpoint = 'forecast'
+            """
+            
+            param_results = self.db.execute_query(param_query, parameters)
+            
+            if not param_results:
+                self.logger.warning(f"No parameters found for codes: {parameters}")
+                return None
+            
+            # Map parameter_id to parameter_code
+            param_map = {row[0]: row[1] for row in param_results}
+            param_names = {row[0]: row[2] for row in param_results}
+            param_units = {row[0]: row[3] for row in param_results}
+            
+            # Step 3: Get forecast data for all parameters
+            param_ids = list(param_map.keys())
+            param_placeholders = ','.join(['%s'] * len(param_ids))
+            
+            data_query = f"""
+            SELECT 
+                fd.parameter_id,
+                fd.valid_time,
+                fd.forecast_hour,
+                fd.value,
+                fd.unit
+            FROM forecast_data fd
+            WHERE fd.forecast_id = %s
+                AND fd.parameter_id IN ({param_placeholders})
+                AND fd.forecast_hour < %s
+            ORDER BY fd.parameter_id, fd.forecast_hour ASC
+            """
+            
+            query_params = [forecast_id] + param_ids + [hours]
+            data_results = self.db.execute_query(data_query, query_params)
+            
+            if not data_results:
+                self.logger.warning(f"No forecast data found for forecast_id {forecast_id}")
+                return None
+            
+            # Step 4: Structure data by parameter
+            result = {
+                "forecast_id": forecast_id,
+                "location_id": location_id,
+                "forecast_reference_time": forecast_time.isoformat() if forecast_time else None,
+                "parameters": {}
+            }
+            
+            # Group data by parameter_id
+            for row in data_results:
+                parameter_id = row[0]
+                valid_time = row[1]
+                forecast_hour = row[2]
+                value = row[3]
+                unit = row[4]
+                
+                param_code = param_map.get(parameter_id)
+                
+                if param_code not in result["parameters"]:
+                    result["parameters"][param_code] = {
+                        "name": param_names.get(parameter_id),
+                        "unit": param_units.get(parameter_id),
+                        "times": [],
+                        "values": []
+                    }
+                
+                result["parameters"][param_code]["times"].append(
+                    valid_time.isoformat() if valid_time else None
+                )
+                result["parameters"][param_code]["values"].append(
+                    float(value) if value is not None else None
+                )
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_hourly_forecast", e)
+            return None
+        
+        
+    def get_all_weather_data(
+        self,
+        location_id: int,
+        days: int = 7,
+        hours: int = 24
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get all weather data for a location (current + hourly + daily)
+        
+        This is the main method used by the /weather/all API endpoint
+        
+        Args:
+            location_id: Location ID
+            days: Number of forecast days (default: 7)
+            hours: Number of forecast hours (default: 24)
+        
+        Returns:
+            Dictionary with all weather data
+        
+        Example:
+            >>> service = WeatherService()
+            >>> weather = service.get_all_weather_data(location_id=1)
+            >>> print(weather['current']['temperature_2m'])
+            22.5
+            >>> print(len(weather['daily']))
+            7
+            >>> print(len(weather['hourly']['parameters']['temp_2m']['values']))
+            24
+        """
+        
+        try:
+            result = {
+                "success": True,
+                "location_id": location_id,
+                "current": None,
+                "hourly": None,
+                "daily": None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Fetch current weather
+            current = self.get_current_weather(location_id)
+            if current:
+                result["current"] = current
+            
+            # Fetch hourly forecast
+            hourly = self.get_hourly_forecast(location_id, hours=hours)
+            if hourly:
+                result["hourly"] = hourly
+            
+            # Fetch daily forecast
+            daily = self.get_daily_forecast(location_id, days=days)
+            if daily:
+                result["daily"] = daily
+                result["daily_count"] = len(daily)
+            
+            # Check if we got any data
+            if not current and not hourly and not daily:
+                self.logger.warning(f"No weather data found for location {location_id}")
+                return None
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_all_weather_data", e)
+            return None
+        
     def cleanup_old_forecasts(self, days_to_keep: int = 5) -> int:
         """
         Delete old forecast batches and their data

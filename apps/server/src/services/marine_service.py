@@ -25,6 +25,7 @@ from src.services.base_service import BaseService
 from src.services.location_service import LocationService
 from src.models.marine_models import MarineResponse
 from src.db.database import DatabaseConnection
+from datetime import datetime
 
 class MarineService(BaseService):
     """
@@ -563,6 +564,387 @@ class MarineService(BaseService):
         rows_inserted = self.db.execute_bulk_insert(insert_query, rows)
         
         return rows_inserted
+    
+    
+        # ========================================
+    # FETCH METHODS FOR API ROUTES
+    # ========================================
+
+    def get_current_marine(self, location_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get current marine conditions for a location
+        
+        Args:
+            location_id: Location ID
+        
+        Returns:
+            Dictionary with current marine data or None
+        
+        Example:
+            >>> service = MarineService()
+            >>> current = service.get_current_marine(location_id=1)
+            >>> print(current['wave_height'])
+            1.5
+        """
+        
+        query = """
+        SELECT 
+            mc.marine_current_id,
+            mc.location_id,
+            mc.observation_time,
+            mc.wave_height,
+            mc.wave_direction,
+            mc.wave_period,
+            mc.swell_wave_height,
+            mc.swell_wave_direction,
+            mc.swell_wave_period,
+            mc.wind_wave_height,
+            mc.sea_surface_temperature,
+            mc.ocean_current_velocity,
+            mc.ocean_current_direction,
+            mc.updated_at
+        FROM marine_current mc
+        WHERE mc.location_id = %s
+        ORDER BY mc.observation_time DESC
+        LIMIT 1
+        """
+        
+        try:
+            result = self.db.execute_query(query, (location_id,))
+            
+            if not result:
+                self.logger.warning(f"No current marine data found for location {location_id}")
+                return None
+            
+            row = result[0]
+            
+            return {
+                "marine_current_id": row[0],
+                "location_id": row[1],
+                "observation_time": row[2].isoformat() if row[2] else None,
+                "wave_height": float(row[3]) if row[3] is not None else None,
+                "wave_direction": row[4],
+                "wave_period": float(row[5]) if row[5] is not None else None,
+                "swell_wave_height": float(row[6]) if row[6] is not None else None,
+                "swell_wave_direction": row[7],
+                "swell_wave_period": float(row[8]) if row[8] is not None else None,
+                "wind_wave_height": float(row[9]) if row[9] is not None else None,
+                "sea_surface_temperature": float(row[10]) if row[10] is not None else None,
+                "ocean_current_velocity": float(row[11]) if row[11] is not None else None,
+                "ocean_current_direction": row[12],
+                "updated_at": row[13].isoformat() if row[13] else None,
+            }
+        
+        except Exception as e:
+            self._log_db_error("get_current_marine", e)
+            return None
+
+
+    def get_daily_marine_forecast(
+        self,
+        location_id: int,
+        days: int = 7
+    ) -> Optional[list]:
+        """
+        Get daily marine forecast for a location
+        
+        Args:
+            location_id: Location ID
+            days: Number of forecast days (default: 7, max: 10)
+        
+        Returns:
+            List of dictionaries with daily marine forecast data or None
+        
+        Example:
+            >>> service = MarineService()
+            >>> daily = service.get_daily_marine_forecast(location_id=1, days=7)
+            >>> print(f"Found {len(daily)} forecast days")
+            >>> print(daily[0]['wave_height_max'])
+            2.5
+        """
+        
+        query = """
+        SELECT 
+            mfd.forecast_day_id,
+            mfd.location_id,
+            mfd.model_id,
+            mfd.valid_date,
+            mfd.wave_height_max,
+            mfd.wave_direction_dominant,
+            mfd.wave_period_max,
+            mfd.swell_wave_height_max,
+            mfd.swell_wave_direction_dominant,
+            mfd.wind_wave_height_max,
+            mfd.forecast_reference_time,
+            mfd.created_at,
+            wm.model_name,
+            wm.model_code
+        FROM marine_forecasts_daily mfd
+        LEFT JOIN weather_models wm ON mfd.model_id = wm.model_id
+        WHERE mfd.location_id = %s
+            AND mfd.valid_date >= CURDATE()
+            AND mfd.valid_date < DATE_ADD(CURDATE(), INTERVAL %s DAY)
+        ORDER BY mfd.valid_date ASC
+        """
+        
+        try:
+            results = self.db.execute_query(query, (location_id, days))
+            
+            if not results:
+                self.logger.warning(f"No daily marine forecast found for location {location_id}")
+                return None
+            
+            daily_data = []
+            for row in results:
+                daily_data.append({
+                    "forecast_day_id": row[0],
+                    "location_id": row[1],
+                    "model_id": row[2],
+                    "valid_date": row[3].isoformat() if row[3] else None,
+                    "wave_height_max": float(row[4]) if row[4] is not None else None,
+                    "wave_direction_dominant": row[5],
+                    "wave_period_max": float(row[6]) if row[6] is not None else None,
+                    "swell_wave_height_max": float(row[7]) if row[7] is not None else None,
+                    "swell_wave_direction_dominant": row[8],
+                    "wind_wave_height_max": float(row[9]) if row[9] is not None else None,
+                    "forecast_reference_time": row[10].isoformat() if row[10] else None,
+                    "created_at": row[11].isoformat() if row[11] else None,
+                    "model_name": row[12],
+                    "model_code": row[13],
+                })
+            
+            return daily_data
+        
+        except Exception as e:
+            self._log_db_error("get_daily_marine_forecast", e)
+            return None
+
+
+    def get_hourly_marine_forecast(
+        self,
+        location_id: int,
+        hours: int = 24,
+        parameters: Optional[list] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get hourly marine forecast for a location
+        
+        Args:
+            location_id: Location ID
+            hours: Number of forecast hours (default: 24)
+            parameters: List of parameter codes (default: all marine params)
+        
+        Returns:
+            Dictionary with hourly marine data structured by parameter
+        
+        Example:
+            >>> service = MarineService()
+            >>> hourly = service.get_hourly_marine_forecast(
+            ...     location_id=1,
+            ...     hours=24,
+            ...     parameters=['wave_height', 'swell_wave_height', 'sea_temp']
+            ... )
+            >>> print(hourly['parameters']['wave_height']['values'])
+            [1.5, 1.6, 1.8, ...]
+        """
+        
+        # Default parameters if none specified
+        if parameters is None:
+            parameters = [
+                'wave_height',
+                'wave_direction',
+                'wave_period',
+                'swell_wave_height',
+                'swell_wave_direction',
+                'swell_wave_period',
+                'wind_wave_height',
+                'sea_temp'
+            ]
+            
+            
+        
+        try:
+            # Step 1: Get the latest forecast batch for this location
+            forecast_query = """
+            SELECT marine_id, forecast_reference_time, model_id
+            FROM marine_forecasts
+            WHERE location_id = %s
+            ORDER BY forecast_reference_time DESC
+            LIMIT 1
+            """
+            
+            forecast_result = self.db.execute_query(forecast_query, (location_id,))
+            
+            if not forecast_result:
+                self.logger.warning(f"No marine forecast batch found for location {location_id}")
+                return None
+            
+            forecast_id = forecast_result[0][0]
+            forecast_time = forecast_result[0][1]
+            model_id = forecast_result[0][2]
+            
+            # Step 2: Get parameter IDs
+            placeholders = ','.join(['%s'] * len(parameters))
+            param_query = f"""
+            SELECT parameter_id, parameter_code, parameter_name, unit
+            FROM weather_parameters
+            WHERE parameter_code IN ({placeholders})
+                AND api_endpoint = 'marine'
+            """
+            
+            param_results = self.db.execute_query(param_query, parameters)
+            
+            if not param_results:
+                self.logger.warning(f"No parameters found for codes: {parameters}")
+                return None
+            
+            # Map parameter_id to parameter_code
+            param_map = {row[0]: row[1] for row in param_results}
+            param_names = {row[0]: row[2] for row in param_results}
+            param_units = {row[0]: row[3] for row in param_results}
+            
+            # Step 3: Get marine data for all parameters
+            param_ids = list(param_map.keys())
+            param_placeholders = ','.join(['%s'] * len(param_ids))
+            
+            data_query = f"""
+            SELECT 
+                md.parameter_id,
+                md.valid_time,
+                md.value,
+                md.unit,
+                md.wave_component,
+                md.sea_condition
+            FROM marine_data md
+            WHERE md.marine_id = %s
+                AND md.parameter_id IN ({param_placeholders})
+                AND md.valid_time >= NOW()
+                AND md.valid_time < DATE_ADD(NOW(), INTERVAL %s HOUR)
+            ORDER BY md.parameter_id, md.valid_time ASC
+            """
+            
+            query_params = [forecast_id] + param_ids + [hours]
+            data_results = self.db.execute_query(data_query, query_params)
+            
+            if not data_results:
+                self.logger.warning(f"No marine data found for forecast_id {forecast_id}")
+                return None
+            
+            # Step 4: Structure data by parameter
+            result = {
+                "marine_id": forecast_id,
+                "location_id": location_id,
+                "model_id": model_id,
+                "forecast_reference_time": forecast_time.isoformat() if forecast_time else None,
+                "parameters": {}
+            }
+            
+            # Group data by parameter_id
+            for row in data_results:
+                parameter_id = row[0]
+                valid_time = row[1]
+                value = row[2]
+                unit = row[3]
+                wave_component = row[4]
+                sea_condition = row[5]
+                
+                param_code = param_map.get(parameter_id)
+                
+                if param_code not in result["parameters"]:
+                    result["parameters"][param_code] = {
+                        "name": param_names.get(parameter_id),
+                        "unit": param_units.get(parameter_id),
+                        "times": [],
+                        "values": [],
+                        "wave_components": [],
+                        "sea_conditions": []
+                    }
+                
+                result["parameters"][param_code]["times"].append(
+                    valid_time.isoformat() if valid_time else None
+                )
+                result["parameters"][param_code]["values"].append(
+                    float(value) if value is not None else None
+                )
+                result["parameters"][param_code]["wave_components"].append(wave_component)
+                result["parameters"][param_code]["sea_conditions"].append(sea_condition)
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_hourly_marine_forecast", e)
+            return None
+
+
+    def get_all_marine_data(
+        self,
+        location_id: int,
+        days: int = 7,
+        hours: int = 24
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get all marine data for a location (current + hourly + daily)
+        
+        This is the main method used by the /marine/all API endpoint
+        
+        Args:
+            location_id: Location ID
+            days: Number of forecast days (default: 7)
+            hours: Number of forecast hours (default: 24)
+        
+        Returns:
+            Dictionary with all marine data
+        
+        Example:
+            >>> service = MarineService()
+            >>> marine = service.get_all_marine_data(location_id=1)
+            >>> print(marine['current']['wave_height'])
+            1.5
+            >>> print(len(marine['daily']))
+            7
+            >>> print(len(marine['hourly']['parameters']['wave_height']['values']))
+            24
+        """
+        
+        try:
+            
+            
+            result = {
+                "success": True,
+                "location_id": location_id,
+                "current": None,
+                "hourly": None,
+                "daily": None,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Fetch current marine conditions
+            current = self.get_current_marine(location_id)
+            if current:
+                result["current"] = current
+            
+            # Fetch hourly forecast
+            hourly = self.get_hourly_marine_forecast(location_id, hours=hours)
+            if hourly:
+                result["hourly"] = hourly
+            
+            # Fetch daily forecast
+            daily = self.get_daily_marine_forecast(location_id, days=days)
+            if daily:
+                result["daily"] = daily
+                result["daily_count"] = len(daily)
+            
+            # Check if we got any data
+            if not current and not hourly and not daily:
+                self.logger.warning(f"No marine data found for location {location_id}")
+                return None
+            
+            return result
+        
+        except Exception as e:
+            self._log_db_error("get_all_marine_data", e)
+            return None
+    
     
     # ==================== CLEANUP METHODS ====================
     
