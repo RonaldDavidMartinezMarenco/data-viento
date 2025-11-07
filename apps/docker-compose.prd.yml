@@ -9,6 +9,7 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=data_viento_database
     networks:
+      - default
       - cf_tunnel
   mysql:
     container_name: app-dataviento-mysql
