@@ -29,5 +29,7 @@ services:
     container_name: caddy_server
     ports:
       - "8001:80"
+    volumes:
+      - ./web:/app:ro
 volumes:
   db_data:
