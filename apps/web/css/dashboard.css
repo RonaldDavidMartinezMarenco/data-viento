@@ -743,3 +743,271 @@ body {
         height: 250px !important;
     }
 }
+
+/* ========================================
+   CURRENT WEATHER CARDS
+   ======================================== */
+
+.current-weather-section {
+    margin-bottom: 30px;
+}
+
+.current-weather-section h3 {
+    color: #2d3748;
+    font-size: 1.25rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.current-weather-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.weather-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weather-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.weather-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.weather-card-icon {
+    font-size: 1.5rem;
+}
+
+.weather-card-title {
+    font-size: 0.875rem;
+    color: #718096;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.weather-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1;
+}
+
+.weather-card-unit {
+    font-size: 1rem;
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+.weather-card-subtitle {
+    font-size: 0.875rem;
+    color: #a0aec0;
+}
+
+/* Weather code specific styling */
+.weather-card.weather-code-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.weather-card.weather-code-card .weather-card-title,
+.weather-card.weather-code-card .weather-card-value,
+.weather-card.weather-code-card .weather-card-subtitle {
+    color: white;
+}
+
+/* Model info card */
+.weather-card.model-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.weather-card.model-card .weather-card-title,
+.weather-card.model-card .weather-card-value,
+.weather-card.model-card .weather-card-subtitle {
+    color: white;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #a0aec0;
+    font-size: 1rem;
+}
+.weather-card.colored-card .weather-card-title,
+.weather-card.colored-card .weather-card-value,
+.weather-card.colored-card .weather-card-unit,
+.weather-card.colored-card .weather-card-subtitle {
+    color: white !important;
+}
+
+.weather-card.aqi-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.weather-card.aqi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Pollutant level indicators */
+.weather-card-subtitle {
+    font-weight: 500;
+}
+
+.charts-section-header {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color, #e5e7eb);
+}
+
+.charts-section-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+    margin: 0;
+}
+
+/* ========================================
+   CLIMATE MODEL INFORMATION CARDS
+   ======================================== */
+
+.climate-info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.climate-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.climate-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.climate-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.climate-card-icon {
+  font-size: 1.75rem;
+}
+
+.climate-card-title {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.climate-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.climate-card-subtitle {
+  font-size: 0.875rem;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+/* Special styling for model card */
+.climate-card.model-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.climate-card.model-card .climate-card-title,
+.climate-card.model-card .climate-card-value,
+.climate-card.model-card .climate-card-subtitle {
+  color: white;
+}
+
+.climate-card.model-card .climate-card-title {
+  opacity: 0.9;
+}
+
+.climate-card.model-card .climate-card-subtitle {
+  opacity: 0.8;
+}
+
+/* Loading spinner in climate section */
+.climate-info-cards .loading-spinner {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: #a0aec0;
+  font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .climate-info-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .climate-card {
+    padding: 1.25rem;
+  }
+  
+  .climate-card-value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .climate-info-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .current-weather-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .weather-card {
+        padding: 15px;
+    }
+    
+    .weather-card-value {
+        font-size: 1.5rem;
+    }
+}

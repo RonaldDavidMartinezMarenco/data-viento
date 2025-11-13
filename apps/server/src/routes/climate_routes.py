@@ -31,9 +31,6 @@ router = APIRouter(
 )
 
 
-
-
-
 # ========================================
 # ROUTES
 # ========================================
@@ -42,8 +39,8 @@ router = APIRouter(
 async def get_climate_projection(
     location_id: int,
     model: str = Query(default='EC_Earth3P_HR', description="Climate model code"),
-    start_date: str = Query(..., description="Start date (YYYY-MM-DD)"),
-    end_date: str = Query(..., description="End date (YYYY-MM-DD)"),
+    start_date: str = Query(default= '2022-01-01', description="Start date (YYYY-MM-DD)"),
+    end_date: str = Query(default = '2026-12-31', description="End date (YYYY-MM-DD)"),
 ) -> Dict[str, Any]:
     """
     Get climate projection for a specific model and date range

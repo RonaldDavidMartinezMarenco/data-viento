@@ -20,14 +20,56 @@ class WeatherApiClient {
      * @returns {Promise<Object>} API response with daily forecast data
      * @throws {Error} When API call fails
      */
+
+
     async fetchDailyForecast(locationId) {
+        return await this.fetchData(`/weather/daily/${locationId}`)
+    }
+
+    async fetchCurrentData(locationId) {
+        return await this.fetchData(`/weather/current/${locationId}`)
+    }
+
+    async fetchHourlyData(locationId) {
+        return await this.fetchData(`/weather/hourly/${locationId}`)
+    }
+
+    async fetchAirQualityCurrentData(locationId) {
+        return await this.fetchData(`/air-quality/current/${locationId}`)
+    }
+
+    async fetchAirQualityHourlyData(locationId) {
+        return await this.fetchData(`/air-quality/hourly/${locationId}`)
+    }
+
+    async fetchMarineCurrentData(locationId) {
+        return await this.fetchData(`/marine/current/${locationId}`)
+    }
+
+    async fetchMarineHourlyData(locationId) {
+        return await this.fetchData(`/marine/hourly/${locationId}`)
+    }
+    
+    async fetchMarineDailyData(locationId) {
+        return await this.fetchData(`/marine/daily/${locationId}`)
+    }
+
+    async fetchSatelliteDailyData(locationId) {
+        return await this.fetchData(`/satellite/daily/${locationId}`)
+    }
+
+    async fetchClimateProjection(locationId) {
+        return await this.fetchData(`/climate/projection/${locationId}`)
+    }
+
+    async fetchData(endpoint) {
         const token = localStorage.getItem("access_token");
 
         if (!token) {
             throw new Error("No authentication token found");
         }
 
-        const apiUrl = getApiUrl(`/weather/daily/${locationId}`);
+        const apiUrl = getApiUrl(endpoint);
 
         try {
             const response = await fetch(apiUrl, {
@@ -60,9 +102,10 @@ class WeatherApiClient {
             return data;
 
         } catch (error) {
-            console.error("Error fetching daily forecast:", error);
+            console.error("Error fetching current forecast:", error);
             throw error;
         }
+    
     }
 }
 

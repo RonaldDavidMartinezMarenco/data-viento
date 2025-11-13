@@ -589,6 +589,185 @@ function handleLocationChange() {
 /**
  * Load daily weather data and update chart
  */
+
+/**
+ * WEATHER FEATURES
+ */
+
+async function loadCurrentWeatherData() {
+    console.log("🌡️ Loading current weather data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching current weather for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchCurrentData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Current weather data received:", response.data);
+            updateCurrentWeatherCards(response.data);
+        } else {
+            console.warn("⚠️ No current weather data available");
+            showCurrentWeatherError("No data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading current weather data:", error);
+        showCurrentWeatherError(error.message);
+    }
+}
+
+/**
+ * Update current weather cards with data
+ */
+function updateCurrentWeatherCards(data) {
+    console.log("🎨 Updating current weather cards...");
+
+    const container = document.getElementById("currentWeatherCards");
+    if (!container) {
+        console.warn("⚠️ Current weather cards container not found");
+        return;
+    }
+
+    // Clear loading state
+    container.innerHTML = "";
+
+    // Weather code descriptions (WMO codes)
+    const weatherDescriptions = {
+        0: "Clear sky",
+        1: "Mainly clear",
+        2: "Partly cloudy",
+        3: "Overcast",
+        45: "Foggy",
+        48: "Depositing rime fog",
+        51: "Light drizzle",
+        53: "Moderate drizzle",
+        55: "Dense drizzle",
+        61: "Slight rain",
+        63: "Moderate rain",
+        65: "Heavy rain",
+        71: "Slight snow",
+        73: "Moderate snow",
+        75: "Heavy snow",
+        77: "Snow grains",
+        80: "Slight rain showers",
+        81: "Moderate rain showers",
+        82: "Violent rain showers",
+        85: "Slight snow showers",
+        86: "Heavy snow showers",
+        95: "Thundersto rm",
+        96: "Thunderstorm with slight hail",
+        99: "Thunderstorm with heavy hail"
+    };
+
+    // Card 1: Temperature
+    const tempCard = createWeatherCard({
+        icon: "🌡️",
+        title: "Temperature",
+        value: data.temperature_2m,
+        unit: "°C",
+        subtitle: `Feels like ${data.apparent_temperature}°C`
+    });
+
+    // Card 2: Humidity
+    const humidityCard = createWeatherCard({
+        icon: "💧",
+        title: "Humidity",
+        value: data.relative_humidity_2m,
+        unit: "%",
+        subtitle: "Relative humidity"
+    });
+
+    // Card 3: Wind Speed
+    const windCard = createWeatherCard({
+        icon: "💨",
+        title: "Wind Speed",
+        value: data.wind_speed_10m,
+        unit: "km/h",
+        subtitle: `Direction: ${data.wind_direction_10m}°`
+    });
+
+    // Card 4: Precipitation
+    const precipCard = createWeatherCard({
+        icon: "🌧️",
+        title: "Precipitation",
+        value: data.precipitation,
+        unit: "mm",
+        subtitle: data.precipitation > 0 ? "Currently raining" : "No precipitation"
+    });
+
+    // Card 5: Cloud Cover
+    const cloudCard = createWeatherCard({
+        icon: "☁️",
+        title: "Cloud Cover",
+        value: data.cloud_cover,
+        unit: "%",
+        subtitle: data.cloud_cover > 75 ? "Very cloudy" : data.cloud_cover > 50 ? "Partly cloudy" : "Mostly clear"
+    });
+
+    // Card 6: Weather Code
+    const weatherDesc = weatherDescriptions[data.weather_code] || "Unknown";
+    const weatherCodeCard = createWeatherCard({
+        icon: "🌤️",
+        title: "Conditions",
+        value: weatherDesc,
+        unit: "",
+        subtitle: `Code: ${data.weather_code}`,
+        extraClass: "weather-code-card"
+    });
+
+    // Card 7: Model Info
+    const modelCard = createWeatherCard({
+        icon: "📡",
+        title: "Data Source",
+        value: data.model_name || "Open-Meteo",
+        unit: "",
+        subtitle: data.model_code || "OM_FORECAST",
+        extraClass: "model-card"
+    });
+
+    // Append all cards
+    container.appendChild(tempCard);
+    container.appendChild(humidityCard);
+    container.appendChild(windCard);
+    container.appendChild(precipCard);
+    container.appendChild(cloudCard);
+    container.appendChild(weatherCodeCard);
+    container.appendChild(modelCard);
+
+    console.log("✅ Current weather cards updated");
+}
+
+function createWeatherCard({ icon, title, value, unit, subtitle, extraClass = "" }) {
+    const card = document.createElement("div");
+    card.className = `weather-card ${extraClass}`;
+
+    card.innerHTML = `
+        <div class="weather-card-header">
+            <span class="weather-card-icon">${icon}</span>
+            <span class="weather-card-title">${title}</span>
+        </div>
+        <div class="weather-card-value">
+            ${typeof value === 'number' ? value.toFixed(1) : value}
+            ${unit ? `<span class="weather-card-unit">${unit}</span>` : ''}
+        </div>
+        ${subtitle ? `<div class="weather-card-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    return card;
+}
+
 async function loadDailyWeatherData() {
   console.log("🌤️ Loading daily weather data for location:", activeLocationId);
 
@@ -616,8 +795,11 @@ async function loadDailyWeatherData() {
     );
 
     if (response && response.data) {
-      console.log("✅ Daily weather data received:", response.data);
+      console.log("Daily weather data received:", response.data);
       updateWeatherDailyChart(response.data);
+      updateWeatherPrecipChart(response.data);
+      updateWeatherUvChart(response.data);
+      updateWeatherWindChart(response.data);
     } else {
       console.warn("⚠️ No daily weather data available");
     }
@@ -625,6 +807,1123 @@ async function loadDailyWeatherData() {
     console.error("❌ Error loading daily weather data:", error);
     // Optionally show user-friendly error message
   }
+}
+
+async function loadHourlyWeatherData() {
+    console.log("⏰ Loading hourly weather data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching hourly weather for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchHourlyData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Hourly weather data received:", response.data);
+            
+            // Update all hourly weather charts
+            updateWeatherHourlyTempChart(response.data);
+            updateWeatherHourlyPrecipChart(response.data);
+            updateWeatherHourlyWindChart(response.data);
+        } else {
+            console.warn("⚠️ No hourly weather data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading hourly weather data:", error);
+    }
+}
+
+/**
+ * AIR QUALITY FEATURES
+ */
+
+async function loadCurrentAirQualityData() {
+    console.log("🌫️ Loading current air quality data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching current air quality for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchAirQualityCurrentData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Current air quality data received:", response.data);
+            updateCurrentAirQualityCards(response.data);
+        } else {
+            console.warn("⚠️ No current air quality data available");
+            showCurrentAirQualityError("No data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading current air quality data:", error);
+        showCurrentAirQualityError(error.message);
+    }
+}
+
+/**
+ * Update current air quality cards with data
+ */
+function updateCurrentAirQualityCards(data) {
+    console.log("🎨 Updating current air quality cards...");
+
+    const container = document.getElementById("currentAirQualityCards");
+    if (!container) {
+        console.warn("⚠️ Current air quality cards container not found");
+        return;
+    }
+
+    // Clear loading state
+    container.innerHTML = "";
+
+    /**
+     * Get AQI level description and color
+     * @param {number} aqi - AQI value
+     * @param {string} standard - 'european' or 'us'
+     * @returns {Object} - { level, color, emoji }
+     */
+    function getAQIInfo(aqi, standard = 'us') {
+        if (standard === 'european') {
+            // European AQI scale (0-100+)
+            if (aqi <= 20) return { level: "Good", color: "#10b981", emoji: "🟢" };
+            if (aqi <= 40) return { level: "Fair", color: "#84cc16", emoji: "🟡" };
+            if (aqi <= 60) return { level: "Moderate", color: "#f59e0b", emoji: "🟠" };
+            if (aqi <= 80) return { level: "Poor", color: "#ef4444", emoji: "🔴" };
+            if (aqi <= 100) return { level: "Very Poor", color: "#991b1b", emoji: "🟣" };
+            return { level: "Extremely Poor", color: "#7c2d12", emoji: "⚫" };
+        } else {
+            // US AQI scale (0-500)
+            if (aqi <= 50) return { level: "Good", color: "#10b981", emoji: "🟢" };
+            if (aqi <= 100) return { level: "Moderate", color: "#fbbf24", emoji: "🟡" };
+            if (aqi <= 150) return { level: "Unhealthy for Sensitive Groups", color: "#f97316", emoji: "🟠" };
+            if (aqi <= 200) return { level: "Unhealthy", color: "#ef4444", emoji: "🔴" };
+            if (aqi <= 300) return { level: "Very Unhealthy", color: "#9333ea", emoji: "🟣" };
+            return { level: "Hazardous", color: "#7c2d12", emoji: "⚫" };
+        }
+    }
+
+    /**
+     * Get pollutant level description
+     * @param {number} value - Pollutant concentration
+     * @param {string} pollutant - Pollutant type
+     * @returns {string} - Level description
+     */
+    function getPollutantLevel(value, pollutant) {
+        if (value === null || value === undefined) return "N/A";
+        
+        switch(pollutant) {
+            case 'pm2_5':
+                if (value <= 12) return "Good";
+                if (value <= 35.4) return "Moderate";
+                if (value <= 55.4) return "Unhealthy for Sensitive";
+                if (value <= 150.4) return "Unhealthy";
+                if (value <= 250.4) return "Very Unhealthy";
+                return "Hazardous";
+            case 'pm10':
+                if (value <= 54) return "Good";
+                if (value <= 154) return "Moderate";
+                if (value <= 254) return "Unhealthy for Sensitive";
+                if (value <= 354) return "Unhealthy";
+                if (value <= 424) return "Very Unhealthy";
+                return "Hazardous";
+            case 'no2':
+                if (value <= 53) return "Good";
+                if (value <= 100) return "Moderate";
+                return "Unhealthy";
+            case 'o3':
+                if (value <= 54) return "Good";
+                if (value <= 70) return "Moderate";
+                return "Unhealthy";
+            case 'so2':
+                if (value <= 35) return "Good";
+                if (value <= 75) return "Moderate";
+                return "Unhealthy";
+            case 'co':
+                if (value <= 4400) return "Good";
+                if (value <= 9400) return "Moderate";
+                return "Unhealthy";
+            default:
+                return "Unknown";
+        }
+    }
+
+    // Get AQI info for styling
+    const europeanAQIInfo = getAQIInfo(data.european_aqi, 'european');
+    const usAQIInfo = getAQIInfo(data.us_aqi, 'us');
+
+    // Card 1: European AQI
+    const europeanAQICard = createAirQualityCard({
+        icon: europeanAQIInfo.emoji,
+        title: "European AQI",
+        value: data.european_aqi,
+        unit: "",
+        subtitle: europeanAQIInfo.level,
+        extraClass: "aqi-card",
+        backgroundColor: europeanAQIInfo.color
+    });
+
+    // Card 2: US AQI
+    const usAQICard = createAirQualityCard({
+        icon: usAQIInfo.emoji,
+        title: "US AQI",
+        value: data.us_aqi,
+        unit: "",
+        subtitle: usAQIInfo.level,
+        extraClass: "aqi-card",
+        backgroundColor: usAQIInfo.color
+    });
+
+    // Card 3: PM2.5
+    const pm25Card = createAirQualityCard({
+        icon: "🔴",
+        title: "PM2.5",
+        value: data.pm2_5,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.pm2_5, 'pm2_5')
+    });
+
+    // Card 4: PM10
+    const pm10Card = createAirQualityCard({
+        icon: "🟤",
+        title: "PM10",
+        value: data.pm10,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.pm10, 'pm10')
+    });
+
+    // Card 5: Nitrogen Dioxide (NO2)
+    const no2Card = createAirQualityCard({
+        icon: "🟡",
+        title: "Nitrogen Dioxide",
+        value: data.nitrogen_dioxide,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.nitrogen_dioxide, 'no2')
+    });
+
+    // Card 6: Ozone (O3)
+    const o3Card = createAirQualityCard({
+        icon: "🔵",
+        title: "Ozone",
+        value: data.ozone,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.ozone, 'o3')
+    });
+
+    // Card 7: Sulphur Dioxide (SO2)
+    const so2Card = createAirQualityCard({
+        icon: "🟢",
+        title: "Sulphur Dioxide",
+        value: data.sulphur_dioxide,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.sulphur_dioxide, 'so2')
+    });
+
+    // Card 8: Carbon Monoxide (CO)
+    const coCard = createAirQualityCard({
+        icon: "⚫",
+        title: "Carbon Monoxide",
+        value: data.carbon_monoxide,
+        unit: "µg/m³",
+        subtitle: getPollutantLevel(data.carbon_monoxide, 'co')
+    });
+
+    // Card 9: Dust
+    const dustCard = createAirQualityCard({
+        icon: "🟫",
+        title: "Dust",
+        value: data.dust,
+        unit: "µg/m³",
+        subtitle: data.dust > 50 ? "High" : data.dust > 20 ? "Moderate" : "Low"
+    });
+
+    // Card 10: Ammonia (if available)
+    if (data.ammonia !== null && data.ammonia !== undefined) {
+        const ammoniaCard = createAirQualityCard({
+            icon: "💨",
+            title: "Ammonia",
+            value: data.ammonia,
+            unit: "µg/m³",
+            subtitle: data.ammonia > 100 ? "High" : "Normal"
+        });
+        container.appendChild(ammoniaCard);
+    }
+
+    // Append all cards
+    container.appendChild(europeanAQICard);
+    container.appendChild(usAQICard);
+    container.appendChild(pm25Card);
+    container.appendChild(pm10Card);
+    container.appendChild(no2Card);
+    container.appendChild(o3Card);
+    container.appendChild(so2Card);
+    container.appendChild(coCard);
+    container.appendChild(dustCard);
+
+    console.log("✅ Current air quality cards updated");
+}
+
+/**
+ * Create an air quality card element
+ */
+function createAirQualityCard({ icon, title, value, unit, subtitle, extraClass = "", backgroundColor = null }) {
+    const card = document.createElement("div");
+    card.className = `weather-card ${extraClass}`;
+    
+    // Apply custom background color if provided (for AQI cards)
+    if (backgroundColor) {
+        card.style.background = `linear-gradient(135deg, ${backgroundColor} 0%, ${backgroundColor}dd 100%)`;
+        card.style.color = "white";
+        // Make all text white for colored cards
+        card.classList.add("colored-card");
+    }
+
+    // Handle null/undefined values
+    const displayValue = (value === null || value === undefined) 
+        ? "N/A" 
+        : (typeof value === 'number' ? value.toFixed(1) : value);
+
+    card.innerHTML = `
+        <div class="weather-card-header">
+            <span class="weather-card-icon">${icon}</span>
+            <span class="weather-card-title">${title}</span>
+        </div>
+        <div class="weather-card-value">
+            ${displayValue}
+            ${unit && value !== null && value !== undefined ? `<span class="weather-card-unit">${unit}</span>` : ''}
+        </div>
+        ${subtitle ? `<div class="weather-card-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    return card;
+}
+
+async function loadHourlyAirQualityData() {
+    console.log("🌫️ Loading hourly air quality data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching hourly air quality for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchAirQualityHourlyData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Hourly air quality data received:", response.data);
+            
+            // Update all air quality charts
+            updateAirQualityAqiChart(response.data);
+            updateAirQualityPollutantsChart(response.data);
+            updateAirQualitySecondaryChart(response.data);
+        } else {
+            console.warn("⚠️ No hourly air quality data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading hourly air quality data:", error);
+    }
+}
+
+/**
+ * MARINE FEATURES
+ */
+async function loadCurrentMarineData() {
+    console.log("🌊 Loading current marine data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching current marine data for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchMarineCurrentData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Current marine data received:", response.data);
+            updateCurrentMarineCards(response.data);
+        } else {
+            console.warn("⚠️ No current marine data available");
+            showCurrentMarineError("No data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading current marine data:", error);
+        showCurrentMarineError(error.message);
+    }
+}
+
+/**
+ * Update current marine cards with data
+ */
+function updateCurrentMarineCards(data) {
+    console.log("🎨 Updating current marine cards...");
+
+    const container = document.getElementById("currentMarineCards");
+    if (!container) {
+        console.warn("⚠️ Current marine cards container not found");
+        return;
+    }
+
+    // Clear loading state
+    container.innerHTML = "";
+
+    /**
+     * Get wave height description
+     * @param {number} height - Wave height in meters
+     * @returns {string} Description
+     */
+    function getWaveDescription(height) {
+        if (height < 0.5) return "Calm seas";
+        if (height < 1.25) return "Light waves";
+        if (height < 2.5) return "Moderate waves";
+        if (height < 4) return "Rough seas";
+        if (height < 6) return "Very rough";
+        if (height < 9) return "High seas";
+        return "Very high seas";
+    }
+
+    /**
+     * Get wave period description
+     * @param {number} period - Wave period in seconds
+     * @returns {string} Description
+     */
+    function getWavePeriodDescription(period) {
+        if (period < 5) return "Short period";
+        if (period < 8) return "Medium period";
+        if (period < 12) return "Long period";
+        return "Very long period";
+    }
+
+    /**
+     * Get ocean current speed description
+     * @param {number} velocity - Current velocity in m/s
+     * @returns {string} Description
+     */
+    function getCurrentDescription(velocity) {
+        if (velocity < 0.25) return "Weak current";
+        if (velocity < 0.5) return "Moderate current";
+        if (velocity < 1.0) return "Strong current";
+        if (velocity < 2.0) return "Very strong current";
+        return "Extreme current";
+    }
+
+    /**
+     * Get temperature description
+     * @param {number} temp - Temperature in °C
+     * @returns {string} Description
+     */
+    function getTempDescription(temp) {
+        if (temp < 10) return "Very cold";
+        if (temp < 15) return "Cold";
+        if (temp < 20) return "Cool";
+        if (temp < 25) return "Comfortable";
+        if (temp < 30) return "Warm";
+        return "Very warm";
+    }
+
+    /**
+     * Convert degrees to compass direction
+     * @param {number} degrees - Direction in degrees
+     * @returns {string} Compass direction
+     */
+    function getCompassDirection(degrees) {
+        const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
+                          "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+        const index = Math.round(degrees / 22.5) % 16;
+        return directions[index];
+    }
+
+    // Card 1: Wave Height
+    const waveHeightCard = createMarineCard({
+        icon: "🌊",
+        title: "Wave Height",
+        value: data.wave_height,
+        unit: "m",
+        subtitle: getWaveDescription(data.wave_height)
+    });
+
+    // Card 2: Wave Direction
+    const waveDirectionCard = createMarineCard({
+        icon: "🧭",
+        title: "Wave Direction",
+        value: `${getCompassDirection(data.wave_direction)}`,
+        unit: "",
+        subtitle: `${data.wave_direction}°`
+    });
+
+    // Card 3: Wave Period
+    const wavePeriodCard = createMarineCard({
+        icon: "⏱️",
+        title: "Wave Period",
+        value: data.wave_period,
+        unit: "s",
+        subtitle: getWavePeriodDescription(data.wave_period)
+    });
+
+    // Card 4: Swell Wave Height
+    const swellHeightCard = createMarineCard({
+        icon: "🌀",
+        title: "Swell Height",
+        value: data.swell_wave_height,
+        unit: "m",
+        subtitle: `Direction: ${getCompassDirection(data.swell_wave_direction)} (${data.swell_wave_direction}°)`
+    });
+
+    // Card 5: Swell Wave Period
+    const swellPeriodCard = createMarineCard({
+        icon: "🔄",
+        title: "Swell Period",
+        value: data.swell_wave_period,
+        unit: "s",
+        subtitle: getWavePeriodDescription(data.swell_wave_period)
+    });
+
+    // Card 6: Wind Wave Height
+    const windWaveCard = createMarineCard({
+        icon: "💨",
+        title: "Wind Wave Height",
+        value: data.wind_wave_height,
+        unit: "m",
+        subtitle: data.wind_wave_height < 0.5 ? "Low wind waves" : "Moderate wind waves"
+    });
+
+    // Card 7: Sea Surface Temperature
+    const tempCard = createMarineCard({
+        icon: "🌡️",
+        title: "Sea Temperature",
+        value: data.sea_surface_temperature,
+        unit: "°C",
+        subtitle: getTempDescription(data.sea_surface_temperature)
+    });
+
+    // Card 8: Ocean Current Velocity
+    const currentVelocityCard = createMarineCard({
+        icon: "➡️",
+        title: "Current Speed",
+        value: data.ocean_current_velocity,
+        unit: "m/s",
+        subtitle: getCurrentDescription(data.ocean_current_velocity)
+    });
+
+    // Card 9: Ocean Current Direction
+    const currentDirectionCard = createMarineCard({
+        icon: "🧭",
+        title: "Current Direction",
+        value: `${getCompassDirection(data.ocean_current_direction)}`,
+        unit: "",
+        subtitle: `${data.ocean_current_direction}°`
+    });
+
+    // Append all cards
+    container.appendChild(waveHeightCard);
+    container.appendChild(waveDirectionCard);
+    container.appendChild(wavePeriodCard);
+    container.appendChild(swellHeightCard);
+    container.appendChild(swellPeriodCard);
+    container.appendChild(windWaveCard);
+    container.appendChild(tempCard);
+    container.appendChild(currentVelocityCard);
+    container.appendChild(currentDirectionCard);
+
+    console.log("✅ Current marine cards updated");
+}
+
+/**
+ * Create a marine card element
+ */
+function createMarineCard({ icon, title, value, unit, subtitle, extraClass = "" }) {
+    const card = document.createElement("div");
+    card.className = `weather-card ${extraClass}`;
+
+    // Handle null/undefined values
+    const displayValue = (value === null || value === undefined) 
+        ? "N/A" 
+        : (typeof value === 'number' ? value.toFixed(2) : value);
+
+    card.innerHTML = `
+        <div class="weather-card-header">
+            <span class="weather-card-icon">${icon}</span>
+            <span class="weather-card-title">${title}</span>
+        </div>
+        <div class="weather-card-value">
+            ${displayValue}
+            ${unit && value !== null && value !== undefined ? `<span class="weather-card-unit">${unit}</span>` : ''}
+        </div>
+        ${subtitle ? `<div class="weather-card-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    return card;
+}
+
+/**
+ * Show error message in current marine section
+ */
+function showCurrentMarineError(message) {
+    const container = document.getElementById("currentMarineCards");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-spinner" style="color: #ef4444;">
+            ❌ ${message}
+        </div>
+    `;
+}async function loadCurrentMarineData() {
+    console.log("🌊 Loading current marine data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching current marine data for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchMarineCurrentData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Current marine data received:", response.data);
+            updateCurrentMarineCards(response.data);
+        } else {
+            console.warn("⚠️ No current marine data available");
+            showCurrentMarineError("No data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading current marine data:", error);
+        showCurrentMarineError(error.message);
+    }
+}
+
+/**
+ * Update current marine cards with data
+ */
+function updateCurrentMarineCards(data) {
+    console.log("🎨 Updating current marine cards...");
+
+    const container = document.getElementById("currentMarineCards");
+    if (!container) {
+        console.warn("⚠️ Current marine cards container not found");
+        return;
+    }
+
+    // Clear loading state
+    container.innerHTML = "";
+
+    /**
+     * Get wave height description
+     * @param {number} height - Wave height in meters
+     * @returns {string} Description
+     */
+    function getWaveDescription(height) {
+        if (height < 0.5) return "Calm seas";
+        if (height < 1.25) return "Light waves";
+        if (height < 2.5) return "Moderate waves";
+        if (height < 4) return "Rough seas";
+        if (height < 6) return "Very rough";
+        if (height < 9) return "High seas";
+        return "Very high seas";
+    }
+
+    /**
+     * Get wave period description
+     * @param {number} period - Wave period in seconds
+     * @returns {string} Description
+     */
+    function getWavePeriodDescription(period) {
+        if (period < 5) return "Short period";
+        if (period < 8) return "Medium period";
+        if (period < 12) return "Long period";
+        return "Very long period";
+    }
+
+    /**
+     * Get ocean current speed description
+     * @param {number} velocity - Current velocity in m/s
+     * @returns {string} Description
+     */
+    function getCurrentDescription(velocity) {
+        if (velocity < 0.25) return "Weak current";
+        if (velocity < 0.5) return "Moderate current";
+        if (velocity < 1.0) return "Strong current";
+        if (velocity < 2.0) return "Very strong current";
+        return "Extreme current";
+    }
+
+    /**
+     * Get temperature description
+     * @param {number} temp - Temperature in °C
+     * @returns {string} Description
+     */
+    function getTempDescription(temp) {
+        if (temp < 10) return "Very cold";
+        if (temp < 15) return "Cold";
+        if (temp < 20) return "Cool";
+        if (temp < 25) return "Comfortable";
+        if (temp < 30) return "Warm";
+        return "Very warm";
+    }
+
+    /**
+     * Convert degrees to compass direction
+     * @param {number} degrees - Direction in degrees
+     * @returns {string} Compass direction
+     */
+    function getCompassDirection(degrees) {
+        const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
+                          "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+        const index = Math.round(degrees / 22.5) % 16;
+        return directions[index];
+    }
+
+    // Card 1: Wave Height
+    const waveHeightCard = createMarineCard({
+        icon: "🌊",
+        title: "Wave Height",
+        value: data.wave_height,
+        unit: "m",
+        subtitle: getWaveDescription(data.wave_height)
+    });
+
+    // Card 2: Wave Direction
+    const waveDirectionCard = createMarineCard({
+        icon: "🧭",
+        title: "Wave Direction",
+        value: `${getCompassDirection(data.wave_direction)}`,
+        unit: "",
+        subtitle: `${data.wave_direction}°`
+    });
+
+    // Card 3: Wave Period
+    const wavePeriodCard = createMarineCard({
+        icon: "⏱️",
+        title: "Wave Period",
+        value: data.wave_period,
+        unit: "s",
+        subtitle: getWavePeriodDescription(data.wave_period)
+    });
+
+    // Card 4: Swell Wave Height
+    const swellHeightCard = createMarineCard({
+        icon: "🌀",
+        title: "Swell Height",
+        value: data.swell_wave_height,
+        unit: "m",
+        subtitle: `Direction: ${getCompassDirection(data.swell_wave_direction)} (${data.swell_wave_direction}°)`
+    });
+
+    // Card 5: Swell Wave Period
+    const swellPeriodCard = createMarineCard({
+        icon: "🔄",
+        title: "Swell Period",
+        value: data.swell_wave_period,
+        unit: "s",
+        subtitle: getWavePeriodDescription(data.swell_wave_period)
+    });
+
+    // Card 6: Wind Wave Height
+    const windWaveCard = createMarineCard({
+        icon: "💨",
+        title: "Wind Wave Height",
+        value: data.wind_wave_height,
+        unit: "m",
+        subtitle: data.wind_wave_height < 0.5 ? "Low wind waves" : "Moderate wind waves"
+    });
+
+    // Card 7: Sea Surface Temperature
+    const tempCard = createMarineCard({
+        icon: "🌡️",
+        title: "Sea Temperature",
+        value: data.sea_surface_temperature,
+        unit: "°C",
+        subtitle: getTempDescription(data.sea_surface_temperature)
+    });
+
+    // Card 8: Ocean Current Velocity
+    const currentVelocityCard = createMarineCard({
+        icon: "➡️",
+        title: "Current Speed",
+        value: data.ocean_current_velocity,
+        unit: "m/s",
+        subtitle: getCurrentDescription(data.ocean_current_velocity)
+    });
+
+    // Card 9: Ocean Current Direction
+    const currentDirectionCard = createMarineCard({
+        icon: "🧭",
+        title: "Current Direction",
+        value: `${getCompassDirection(data.ocean_current_direction)}`,
+        unit: "",
+        subtitle: `${data.ocean_current_direction}°`
+    });
+
+    // Append all cards
+    container.appendChild(waveHeightCard);
+    container.appendChild(waveDirectionCard);
+    container.appendChild(wavePeriodCard);
+    container.appendChild(swellHeightCard);
+    container.appendChild(swellPeriodCard);
+    container.appendChild(windWaveCard);
+    container.appendChild(tempCard);
+    container.appendChild(currentVelocityCard);
+    container.appendChild(currentDirectionCard);
+
+    console.log("✅ Current marine cards updated");
+}
+
+/**
+ * Create a marine card element
+ */
+function createMarineCard({ icon, title, value, unit, subtitle, extraClass = "" }) {
+    const card = document.createElement("div");
+    card.className = `weather-card ${extraClass}`;
+
+    // Handle null/undefined values
+    const displayValue = (value === null || value === undefined) 
+        ? "N/A" 
+        : (typeof value === 'number' ? value.toFixed(2) : value);
+
+    card.innerHTML = `
+        <div class="weather-card-header">
+            <span class="weather-card-icon">${icon}</span>
+            <span class="weather-card-title">${title}</span>
+        </div>
+        <div class="weather-card-value">
+            ${displayValue}
+            ${unit && value !== null && value !== undefined ? `<span class="weather-card-unit">${unit}</span>` : ''}
+        </div>
+        ${subtitle ? `<div class="weather-card-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    return card;
+}
+
+async function loadDailyMarineData() {
+    console.log("🌊 Loading daily marine data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching daily marine forecast for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchMarineDailyData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Daily marine data received:", response.data);
+            
+            // Update all daily marine charts
+            updateMarineDailyWaveChart(response.data);
+            updateMarineDailyPeriodChart(response.data);
+        } else {
+            console.warn("⚠️ No daily marine data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading daily marine data:", error);
+    }
+}
+
+async function loadHourlyMarineData() {
+    console.log("🌊 Loading hourly marine data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching hourly marine forecast for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchMarineHourlyData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Hourly marine data received:", response.data);
+            
+            // Update all hourly marine charts
+            updateMarineHourlyWaveChart(response.data);
+            updateMarineHourlyPeriodChart(response.data);
+        } else {
+            console.warn("⚠️ No hourly marine data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading hourly marine data:", error);
+    }
+}
+
+async function loadDailySatelliteData() {
+    console.log("🛰️ Loading daily satellite data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching daily satellite data for location_id:", userLoc.location_id);
+        const response = await weatherApiClient.fetchSatelliteDailyData(userLoc.location_id);
+
+        if (response && response.data) {
+            console.log("✅ Daily satellite data received:", response.data);
+            
+            // Update all daily satellite charts
+            updateSatelliteDailyRadiationChart(response.data);
+            updateSatelliteDailyIrradianceChart(response.data);
+        } else {
+            console.warn("⚠️ No daily satellite data available");
+        }
+    } catch (error) {
+        console.error("❌ Error loading daily satellite data:", error);
+    }
+}
+async function loadClimateProjectionData() {
+    console.log("🌍 Loading climate projection data for location:", activeLocationId);
+
+    if (!activeLocationId) {
+        console.warn("⚠️ No active location selected");
+        return;
+    }
+
+    try {
+        // Get the actual location_id from user_locations
+        const userLoc = userLocations.find(
+            (ul) => ul.user_location_id === activeLocationId
+        );
+        if (!userLoc) {
+            console.warn("⚠️ User location not found");
+            return;
+        }
+
+        console.log("📡 Fetching climate projection for location_id:", userLoc.location_id);
+        
+        // Default model: EC_Earth3P_HR
+        // Date range: 2022-01-01 to 2026-12-31 (5 years)
+        const response = await weatherApiClient.fetchClimateProjection(
+            userLoc.location_id,
+            'EC_Earth3P_HR',
+            '2022-01-01',
+            '2026-12-31'
+        );
+
+        if (response && response.data) {
+            console.log("✅ Climate projection data received:", response.data);
+            console.log(`   Model: ${response.data.model_name}`);
+            console.log(`   Period: ${response.data.start_date} to ${response.data.end_date}`);
+            console.log(`   Total days: ${response.data.total_days}`);
+            
+            // Update model info card
+            updateClimateModelInfo(response.data);
+            
+            // Update all climate charts
+            updateClimateTempTrendsChart(response.data);
+            updateClimatePrecipHumidityChart(response.data);
+            updateClimateWindRadiationChart(response.data);
+        } else {
+            console.warn("⚠️ No climate projection data available");
+            showClimateError("No data available for this location");
+        }
+    } catch (error) {
+        console.error("❌ Error loading climate projection data:", error);
+        showClimateError(error.message);
+    }
+}
+
+/**
+ * Update climate model information card
+ */
+function updateClimateModelInfo(data) {
+    console.log("🎨 Updating climate model info cards...");
+
+    const container = document.getElementById("climateModelInfo");
+    if (!container) {
+        console.warn("⚠️ Climate model info container not found");
+        return;
+    }
+
+    // Clear loading state
+    container.innerHTML = "";
+
+    // Card 1: Climate Model
+    const modelCard = createClimateCard({
+        icon: "🌍",
+        title: "Climate Model",
+        value: data.model_name,
+        subtitle: data.model_code,
+        extraClass: "model-card"
+    });
+
+    // Card 2: Projection Period
+    const periodCard = createClimateCard({
+        icon: "📅",
+        title: "Projection Period",
+        value: `${new Date(data.start_date).getFullYear()}-${new Date(data.end_date).getFullYear()}`,
+        subtitle: `${data.total_days} days`
+    });
+
+    // Card 3: Data Points
+    const dataPointsCard = createClimateCard({
+        icon: "📊",
+        title: "Data Points",
+        value: data.daily_data.length.toLocaleString(),
+        subtitle: "Daily observations"
+    });
+
+    // Card 4: Spatial Resolution
+    const resolutionCard = createClimateCard({
+        icon: "🎯",
+        title: "Resolution",
+        value: "25 km",
+        subtitle: "Spatial resolution"
+    });
+
+    // Append all cards
+    container.appendChild(modelCard);
+    container.appendChild(periodCard);
+    container.appendChild(dataPointsCard);
+    container.appendChild(resolutionCard);
+
+    console.log("✅ Climate model info cards updated");
+}
+
+/**
+ * Create a climate info card element
+ */
+function createClimateCard({ icon, title, value, subtitle, extraClass = "" }) {
+    const card = document.createElement("div");
+    card.className = `climate-card ${extraClass}`;
+
+    card.innerHTML = `
+        <div class="climate-card-header">
+            <span class="climate-card-icon">${icon}</span>
+            <span class="climate-card-title">${title}</span>
+        </div>
+        <div class="climate-card-value">${value}</div>
+        ${subtitle ? `<div class="climate-card-subtitle">${subtitle}</div>` : ''}
+    `;
+
+    return card;
+}
+
+/**
+ * Show error message in climate section
+ */
+function showClimateError(message) {
+    const container = document.getElementById("climateModelInfo");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-spinner" style="color: #ef4444;">
+            ❌ ${message}
+        </div>
+    `;
+}
+
+/**
+ * Show error message in current marine section
+ */
+function showCurrentMarineError(message) {
+    const container = document.getElementById("currentMarineCards");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-spinner" style="color: #ef4444;">
+            ❌ ${message}
+        </div>
+    `;
+}
+
+
+function showCurrentAirQualityError(message) {
+    const container = document.getElementById("currentAirQualityCards");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-spinner" style="color: #ef4444;">
+            ❌ ${message}
+        </div>
+    `;
+}
+function showCurrentWeatherError(message) {
+    const container = document.getElementById("currentWeatherCards");
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-spinner" style="color: #ef4444;">
+            ❌ ${message}
+        </div>
+    `;
 }
 
 /**
@@ -639,28 +1938,17 @@ function refreshAllCharts() {
     refreshBtn.classList.add("rotating");
   }
 
-  // Load real daily weather data
+  loadCurrentWeatherData();
   loadDailyWeatherData();
+  loadHourlyWeatherData();
+  loadCurrentAirQualityData();
+  loadHourlyAirQualityData();
+  loadCurrentMarineData();
+  loadDailyMarineData();
+  loadHourlyMarineData();
+  loadDailySatelliteData();
+  loadClimateProjectionData()
 
-  // For now, recreate other charts with sample data
-  if (typeof createWeatherWindChart === "function") {
-    createWeatherWindChart([]);
-  }
-
-  if (typeof createAirQualityChart === "function") {
-    createAirQualityChart([]);
-  }
-
-  if (typeof createMarineWaveChart === "function") {
-    createMarineWaveChart([]);
-  }
-
-  if (typeof createSatelliteChart === "function") {
-    createSatelliteChart([]);
-  }
-  if (typeof createClimateTempChart === "function") {
-    createClimateTempChart([]);
-  }
 
   // Remove loading state after a short delay
   setTimeout(() => {

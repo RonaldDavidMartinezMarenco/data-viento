@@ -9,11 +9,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="static/data_viento.png">
+    <link rel="shortcut icon" type="image/png" href="static/data_viento.png">
+    
     
     <!-- Styles - FIXED: Use only existing CSS files -->
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/dashboard.css">
-    <link rel="stylesheet" href="/css/charts.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -56,7 +58,7 @@
         
         <!-- Main Content -->
         <main class="dashboard-main">
-            <!-- ✅ NEW: Sidebar Navigation -->
+            <!-- Sidebar Navigation -->
             <aside class="dashboard-sidebar">
                 <nav class="sidebar-nav">
                     <h3 class="sidebar-title">Weather Models</h3>
@@ -248,21 +250,28 @@
                 </section>
 
                 <!-- Find this section and REPLACE it: -->
+                <!-- Weather Section -->
                 <section id="section-weather" class="content-section">
                     <h2>⛅ Weather Forecast</h2>
-                    <p class="section-description">Current weather and 7-day forecast data</p>
+                    <p class="section-description">Current weather and forecast data</p>
                     
-                    <!-- ✅ NEW: Current Weather Card (will be populated by JS) -->
-                    <div id="currentWeatherCard" class="current-weather-card">
-                        <div class="loading-spinner">Loading current weather...</div>
+                    <!-- Current Weather Cards -->
+                    <div class="current-weather-section">
+                        <h3>Current Conditions</h3>
+                        <div id="currentWeatherCards" class="current-weather-grid">
+                            <div class="loading-spinner">Loading current weather...</div>
+                        </div>
                     </div>
                     
-                    <!-- ✅ NEW: Charts Grid with 5 charts -->
+                    <!-- Daily Forecast Charts -->
+                    <div class="charts-section-header">
+                        <h3>📅 7-Day Forecast</h3>
+                    </div>
                     <div class="charts-grid">
-                        <!-- Chart 1: Temperature (7 days) -->
+                        <!-- Chart 1: Temperature (EXISTING) -->
                         <div class="chart-card full-width">
                             <div class="chart-header">
-                                <h3>🌡️ Temperature Forecast (7 Days)</h3>
+                                <h3>🌡️ Daily Temperature</h3>
                                 <p class="chart-subtitle">Daily max, mean, and min temperatures</p>
                             </div>
                             <div class="chart-canvas-wrapper">
@@ -270,28 +279,127 @@
                             </div>
                         </div>
                         
-                        <!-- Chart 2: Wind Speed (24 hours) -->
+                        <!-- Chart 2: Precipitation (EXISTING) -->
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>💨 Wind Speed (24 Hours)</h3>
-                                <p class="chart-subtitle">Hourly wind speed and gusts</p>
+                                <h3>🌧️ Precipitation Forecast</h3>
+                                <p class="chart-subtitle">Daily precipitation amount and probability</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherPrecipChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Wind & Gusts (EXISTING) -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>💨 Wind & Gusts</h3>
+                                <p class="chart-subtitle">Daily max wind speed and gusts</p>
                             </div>
                             <div class="chart-canvas-wrapper">
                                 <canvas id="weatherWindChart"></canvas>
                             </div>
                         </div>
                         
+                        <!-- Chart 4: UV Index & Sunshine (EXISTING) -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>☀️ UV Index & Sunshine Duration</h3>
+                                <p class="chart-subtitle">Daily UV index and hours of sunshine</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherUvChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hourly Forecast Charts (NEW) -->
+                    <div class="charts-section-header">
+                        <h3>⏰ 24-Hour Forecast</h3>
+                    </div>
+                    <div class="charts-grid">
+                        <!-- Chart 5: Hourly Temperature & Humidity -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>🌡️ Temperature & Humidity (24h)</h3>
+                                <p class="chart-subtitle">Hourly temperature and relative humidity</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherHourlyTempChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 6: Hourly Precipitation -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>🌧️ Precipitation (24h)</h3>
+                                <p class="chart-subtitle">Hourly precipitation amount and probability</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherHourlyPrecipChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 7: Hourly Wind Speed (Full Width) -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>💨 Wind Speed & Direction (24h)</h3>
+                                <p class="chart-subtitle">Hourly wind speed and direction</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="weatherHourlyWindChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </section>
                 
                 <!-- Air Quality Section -->
                 <section id="section-air-quality" class="content-section">
                     <h2>🌫️ Air Quality</h2>
-                    <p class="section-description">PM2.5, PM10, and pollutant levels</p>
+                    <p class="section-description">Current air quality and pollutant levels</p>
                     
+                    <!-- Current Air Quality Cards -->
+                    <div class="current-weather-section">
+                        <h3>Current Air Quality</h3>
+                        <div id="currentAirQualityCards" class="current-weather-grid">
+                            <!-- Loading state -->
+                            <div class="loading-spinner">Loading air quality data...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Grid -->
                     <div class="charts-grid">
-                        <div class="chart-container">
-                            <h3>Air Quality Index</h3>
-                            <canvas id="airQualityChart"></canvas>
+                        <!-- Chart 1: AQI Trends (24 hours) -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>📊 AQI Trends (24 Hours)</h3>
+                                <p class="chart-subtitle">European vs US Air Quality Index</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="airQualityAqiChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Major Pollutants -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>🔬 Major Pollutants (24 Hours)</h3>
+                                <p class="chart-subtitle">PM2.5, PM10, NO2, O3</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="airQualityPollutantsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Secondary Pollutants (Full Width) -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>⚗️ Secondary Pollutants (24 Hours)</h3>
+                                <p class="chart-subtitle">SO2 and CO levels</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="airQualitySecondaryChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -301,36 +409,156 @@
                     <h2>🌊 Marine Weather</h2>
                     <p class="section-description">Wave height, ocean temperature, and currents</p>
                     
+                    <!-- Current Marine Conditions Cards -->
+                    <div class="current-weather-section">
+                        <h3>Current Marine Conditions</h3>
+                        <div id="currentMarineCards" class="current-weather-grid">
+                            <!-- Loading state -->
+                            <div class="loading-spinner">Loading marine data...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Forecast Charts -->
+                    <div class="charts-section-header">
+                        <h3>📅 Marine Forecast</h3>
+                    </div>
                     <div class="charts-grid">
-                        <div class="chart-container">
-                            <h3>Wave Height Forecast</h3>
-                            <canvas id="marineWaveChart"></canvas>
+                        <!-- Chart 1: Daily Wave Heights -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌊 Wave Heights Forecast</h3>
+                                <p class="chart-subtitle">Total, swell, and wind wave heights</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="marineDailyWaveChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Wave Period & Direction -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>⏱️ Wave Period & Direction</h3>
+                                <p class="chart-subtitle">Daily max wave period and dominant direction</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="marineDailyPeriodChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hourly Forecast Charts (NEW) -->
+                    <div class="charts-section-header">
+                        <h3>⏰ 24-Hour Marine Forecast</h3>
+                    </div>
+                    <div class="charts-grid">
+                        <!-- Chart 3: Hourly Wave Heights -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌊 Wave Heights (24 Hours)</h3>
+                                <p class="chart-subtitle">Hourly total, swell, and wind wave heights</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="marineHourlyWaveChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 4: Hourly Wave Period & Temperature -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>⏱️ Wave Period & Sea Temperature (24h)</h3>
+                                <p class="chart-subtitle">Hourly wave period and sea surface temperature</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="marineHourlyPeriodChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
                 
                 <!-- Satellite Section -->
                 <section id="section-satellite" class="content-section">
-                    <h2>☀️ Satellite Radiation</h2>
-                    <p class="section-description">Solar radiation and irradiance data</p>
+                    <h2>🛰️ Solar Radiation</h2>
+                    <p class="section-description">Satellite-derived solar radiation data for renewable energy</p>
                     
+                    <!-- Daily Satellite Charts -->
+                    <div class="charts-section-header">
+                        <h3>📅 Historical Solar Radiation (Last N Days)</h3>
+                    </div>
                     <div class="charts-grid">
-                        <div class="chart-container">
-                            <h3>Solar Radiation (Daily)</h3>
-                            <canvas id="satelliteChart"></canvas>
+                        <!-- Chart 1: Solar Radiation Components -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>☀️ Solar Radiation Components</h3>
+                                <p class="chart-subtitle">Shortwave, direct, and diffuse radiation over time</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="satelliteDailyRadiationChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Irradiance & Terrestrial Radiation -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌍 Irradiance & Terrestrial Radiation</h3>
+                                <p class="chart-subtitle">DNI, GTI, and terrestrial radiation measurements</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="satelliteDailyIrradianceChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
                 
                 <!-- Climate Section -->
+                <!-- Climate Section -->
                 <section id="section-climate" class="content-section">
-                    <h2>🌍 Climate Change</h2>
-                    <p class="section-description">Long-term climate trends and projections</p>
+                    <h2>🌍 Climate Change Projections</h2>
+                    <p class="section-description">Long-term climate trends and projections (2022-2026)</p>
                     
+                    <!-- Climate Model Info -->
+                    <div class="current-weather-section">
+                        <h3>📊 Climate Model Information</h3>
+                        <div id="climateModelInfo" class="climate-info-cards">
+                            <div class="loading-spinner">Loading climate projection data...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Climate Projection Charts -->
+                    <div class="charts-section-header">
+                        <h3>📈 5-Year Climate Trends (2022-2026)</h3>
+                    </div>
                     <div class="charts-grid">
-                        <div class="chart-container">
-                            <h3>Temperature Trends</h3>
-                            <canvas id="climateTempChart"></canvas>
+                        <!-- Chart 1: Temperature Trends -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌡️ Temperature Trends (2022-2026)</h3>
+                                <p class="chart-subtitle">Max, mean, and min temperatures over 5 years</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="climateTempTrendsChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 2: Precipitation & Humidity -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>🌧️ Precipitation & Humidity Patterns</h3>
+                                <p class="chart-subtitle">Annual precipitation and humidity trends</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="climatePrecipHumidityChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart 3: Wind & Solar Radiation -->
+                        <div class="chart-card full-width">
+                            <div class="chart-header">
+                                <h3>💨 Wind Speed & Solar Radiation</h3>
+                                <p class="chart-subtitle">Wind patterns and solar energy trends</p>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="climateWindRadiationChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
