@@ -267,17 +267,34 @@ function populateStats(user) {
     console.warn("Element #statUserType not found");
   }
 
-  // Card 3: Preferred Units
-  // Convert "metric" → "Metric"
   const statUnits = document.getElementById("statUnits");
   if (statUnits) {
-    // Capitalize first letter
-    const units =
-      user.preferred_units.charAt(0).toUpperCase() +
-      user.preferred_units.slice(1);
+    // Determine unit system from individual preferences
+    const tempUnit = user.preferred_temperature_unit || 'celsius';
+    const windUnit = user.preferred_wind_speed_unit || 'kmh';
+    const precipUnit = user.preferred_precipitation_unit || 'mm';
+    
+    // Check if all units are metric
+    const isMetric = (tempUnit === 'celsius' && windUnit === 'kmh' && precipUnit === 'mm');
+    
+    // Check if all units are imperial
+    const isImperial = (tempUnit === 'fahrenheit' && windUnit === 'mph' && precipUnit === 'inch');
+    
+    let unitsDisplay;
+    if (isMetric) {
+      unitsDisplay = "Metric";
+      statUnits.style.color = "#10b981"; // Green
+    } else if (isImperial) {
+      unitsDisplay = "Imperial";
+      statUnits.style.color = "#3b82f6"; // Blue
+    } else {
+      unitsDisplay = "Mixed";
+      statUnits.style.color = "#f59e0b"; // Orange (warning)
+      console.warn("⚠️ Mixed unit system detected");
+    }
 
-    statUnits.textContent = units;
-    console.log("  ✓ Set Preferred Units:", units);
+    statUnits.textContent = unitsDisplay;
+    console.log("  ✓ Set Preferred Units:", unitsDisplay);
   } else {
     console.warn("Element #statUnits not found");
   }
@@ -304,6 +321,71 @@ function populateStats(user) {
   console.log("Stats cards populated successfully");
 }
 
+async function refreshUserPreferences() {
+  console.log("🔄 Refreshing user preferences...");
+  
+  try {
+    const token = localStorage.getItem("access_token");
+    
+    if (!token) {
+      throw new Error("No access token available");
+    }
+    
+    const apiUrl = getApiUrl("/users/me/preferences");
+    console.log("   API URL:", apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch preferences");
+    }
+    
+    const preferences = await response.json();
+    console.log("✅ Preferences refreshed:", preferences);
+    
+    // Update the stats card
+    const statUnits = document.getElementById("statUnits");
+    if (statUnits) {
+      // Determine unit system from individual preferences
+      const tempUnit = preferences.preferred_temperature_unit || 'celsius';
+      const windUnit = preferences.preferred_wind_speed_unit || 'kmh';
+      const precipUnit = preferences.preferred_precipitation_unit || 'mm';
+      
+      // Check if all units are metric
+      const isMetric = (tempUnit === 'celsius' && windUnit === 'kmh' && precipUnit === 'mm');
+      
+      // Check if all units are imperial
+      const isImperial = (tempUnit === 'fahrenheit' && windUnit === 'mph' && precipUnit === 'inch');
+      
+      let unitsDisplay;
+      if (isMetric) {
+        unitsDisplay = "Metric";
+        statUnits.style.color = "#10b981"; // Green
+      } else if (isImperial) {
+        unitsDisplay = "Imperial";
+        statUnits.style.color = "#3b82f6"; // Blue
+      } else {
+        unitsDisplay = "Mixed";
+        statUnits.style.color = "#f59e0b"; // Orange
+      }
+      
+      statUnits.textContent = unitsDisplay;
+      console.log(`✅ Stats card updated: ${unitsDisplay}`);
+    }
+    
+    return preferences;
+    
+  } catch (error) {
+    console.error("❌ Error refreshing preferences:", error);
+    return null;
+  }
+}
 // ========================================
 // STEP 5: POPULATE DATA TABLE
 // ========================================
@@ -1886,3 +1968,4 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   console.log("\n✅ Dashboard fully initialized!");
 });
+window.refreshUserPreferences = refreshUserPreferences;

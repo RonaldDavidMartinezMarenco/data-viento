@@ -634,12 +634,18 @@ async function savePreferences() {
         userPreferences = await response.json();
         console.log('✅ Preferences saved to backend:', userPreferences);
         
+         if (typeof refreshUserPreferences === 'function') {
+            console.log('🔄 Updating Overview stats card...');
+            await refreshUserPreferences();
+        }
+        
         // Show success message with details
         const unitLabel = isMetric 
             ? 'Metric (°C, km/h, mm)' 
             : 'Imperial (°F, mph, in)';
         
-        alert(`✅ Unit system saved: ${unitLabel}`);
+        alert(`✅ Unit system saved: ${unitLabel}\n\nOverview card has been updated!`);
+        
         
     } catch (error) {
         console.error('❌ Error saving preferences:', error);
