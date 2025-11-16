@@ -7,7 +7,7 @@
  * - Notification settings
  */
 
-console.log('✅ settings.js loaded');
+console.log('settings.js loaded');
 
 // ========================================
 // GLOBAL STATE

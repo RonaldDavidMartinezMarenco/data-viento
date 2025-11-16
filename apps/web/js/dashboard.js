@@ -10,6 +10,21 @@
 
 console.log("dashboard.js loaded");
 
+export const weatherStore = {
+    currentWeatherData: null,
+    dailyWeatherData: null,
+    hourlyWeatherData: null,
+    currentAirQualityData: null,
+    hourlyAirQualityData: null,
+    currentMarineData: null,
+    dailyMarineData: null,
+    hourlyMarineData: null,
+    dailySatelliteData: null,
+    climateProjectionData: null
+};
+
+export let activeLocationId = null; 
+
 // ========================================
 // STEP 1: CHECK AUTHENTICATION
 // ========================================
@@ -494,7 +509,6 @@ function setupLogout() {
 // ACTIVE LOCATION MANAGEMENT
 // ========================================
 
-let activeLocationId = null; // Currently selected location
 
 /**
  * Populate location selector dropdown
@@ -617,6 +631,7 @@ async function loadCurrentWeatherData() {
 
         if (response && response.data) {
             console.log("✅ Current weather data received:", response.data);
+            weatherStore.currentWeatherData = response.data
             updateCurrentWeatherCards(response.data);
         } else {
             console.warn("⚠️ No current weather data available");
@@ -793,9 +808,9 @@ async function loadDailyWeatherData() {
     const response = await weatherApiClient.fetchDailyForecast(
       userLoc.location_id
     );
-
     if (response && response.data) {
       console.log("Daily weather data received:", response.data);
+      weatherStore.dailyWeatherData = response.data
       updateWeatherDailyChart(response.data);
       updateWeatherPrecipChart(response.data);
       updateWeatherUvChart(response.data);
@@ -832,7 +847,7 @@ async function loadHourlyWeatherData() {
 
         if (response && response.data) {
             console.log("✅ Hourly weather data received:", response.data);
-            
+            weatherStore.hourlyWeatherData = response.data
             // Update all hourly weather charts
             updateWeatherHourlyTempChart(response.data);
             updateWeatherHourlyPrecipChart(response.data);
@@ -872,6 +887,7 @@ async function loadCurrentAirQualityData() {
 
         if (response && response.data) {
             console.log("✅ Current air quality data received:", response.data);
+            weatherStore.currentAirQualityData = response.data
             updateCurrentAirQualityCards(response.data);
         } else {
             console.warn("⚠️ No current air quality data available");
@@ -1142,7 +1158,7 @@ async function loadHourlyAirQualityData() {
 
         if (response && response.data) {
             console.log("✅ Hourly air quality data received:", response.data);
-            
+            weatherStore.hourlyAirQualityData = response.data
             // Update all air quality charts
             updateAirQualityAqiChart(response.data);
             updateAirQualityPollutantsChart(response.data);
@@ -1181,6 +1197,7 @@ async function loadCurrentMarineData() {
 
         if (response && response.data) {
             console.log("✅ Current marine data received:", response.data);
+            weatherStore.currentMarineData = response.data
             updateCurrentMarineCards(response.data);
         } else {
             console.warn("⚠️ No current marine data available");
@@ -1407,241 +1424,6 @@ function showCurrentMarineError(message) {
             ❌ ${message}
         </div>
     `;
-}async function loadCurrentMarineData() {
-    console.log("🌊 Loading current marine data for location:", activeLocationId);
-
-    if (!activeLocationId) {
-        console.warn("⚠️ No active location selected");
-        return;
-    }
-
-    try {
-        // Get the actual location_id from user_locations
-        const userLoc = userLocations.find(
-            (ul) => ul.user_location_id === activeLocationId
-        );
-        if (!userLoc) {
-            console.warn("⚠️ User location not found");
-            return;
-        }
-
-        console.log("📡 Fetching current marine data for location_id:", userLoc.location_id);
-        const response = await weatherApiClient.fetchMarineCurrentData(userLoc.location_id);
-
-        if (response && response.data) {
-            console.log("✅ Current marine data received:", response.data);
-            updateCurrentMarineCards(response.data);
-        } else {
-            console.warn("⚠️ No current marine data available");
-            showCurrentMarineError("No data available");
-        }
-    } catch (error) {
-        console.error("❌ Error loading current marine data:", error);
-        showCurrentMarineError(error.message);
-    }
-}
-
-/**
- * Update current marine cards with data
- */
-function updateCurrentMarineCards(data) {
-    console.log("🎨 Updating current marine cards...");
-
-    const container = document.getElementById("currentMarineCards");
-    if (!container) {
-        console.warn("⚠️ Current marine cards container not found");
-        return;
-    }
-
-    // Clear loading state
-    container.innerHTML = "";
-
-    /**
-     * Get wave height description
-     * @param {number} height - Wave height in meters
-     * @returns {string} Description
-     */
-    function getWaveDescription(height) {
-        if (height < 0.5) return "Calm seas";
-        if (height < 1.25) return "Light waves";
-        if (height < 2.5) return "Moderate waves";
-        if (height < 4) return "Rough seas";
-        if (height < 6) return "Very rough";
-        if (height < 9) return "High seas";
-        return "Very high seas";
-    }
-
-    /**
-     * Get wave period description
-     * @param {number} period - Wave period in seconds
-     * @returns {string} Description
-     */
-    function getWavePeriodDescription(period) {
-        if (period < 5) return "Short period";
-        if (period < 8) return "Medium period";
-        if (period < 12) return "Long period";
-        return "Very long period";
-    }
-
-    /**
-     * Get ocean current speed description
-     * @param {number} velocity - Current velocity in m/s
-     * @returns {string} Description
-     */
-    function getCurrentDescription(velocity) {
-        if (velocity < 0.25) return "Weak current";
-        if (velocity < 0.5) return "Moderate current";
-        if (velocity < 1.0) return "Strong current";
-        if (velocity < 2.0) return "Very strong current";
-        return "Extreme current";
-    }
-
-    /**
-     * Get temperature description
-     * @param {number} temp - Temperature in °C
-     * @returns {string} Description
-     */
-    function getTempDescription(temp) {
-        if (temp < 10) return "Very cold";
-        if (temp < 15) return "Cold";
-        if (temp < 20) return "Cool";
-        if (temp < 25) return "Comfortable";
-        if (temp < 30) return "Warm";
-        return "Very warm";
-    }
-
-    /**
-     * Convert degrees to compass direction
-     * @param {number} degrees - Direction in degrees
-     * @returns {string} Compass direction
-     */
-    function getCompassDirection(degrees) {
-        const directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
-                          "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
-        const index = Math.round(degrees / 22.5) % 16;
-        return directions[index];
-    }
-
-    // Card 1: Wave Height
-    const waveHeightCard = createMarineCard({
-        icon: "🌊",
-        title: "Wave Height",
-        value: data.wave_height,
-        unit: "m",
-        subtitle: getWaveDescription(data.wave_height)
-    });
-
-    // Card 2: Wave Direction
-    const waveDirectionCard = createMarineCard({
-        icon: "🧭",
-        title: "Wave Direction",
-        value: `${getCompassDirection(data.wave_direction)}`,
-        unit: "",
-        subtitle: `${data.wave_direction}°`
-    });
-
-    // Card 3: Wave Period
-    const wavePeriodCard = createMarineCard({
-        icon: "⏱️",
-        title: "Wave Period",
-        value: data.wave_period,
-        unit: "s",
-        subtitle: getWavePeriodDescription(data.wave_period)
-    });
-
-    // Card 4: Swell Wave Height
-    const swellHeightCard = createMarineCard({
-        icon: "🌀",
-        title: "Swell Height",
-        value: data.swell_wave_height,
-        unit: "m",
-        subtitle: `Direction: ${getCompassDirection(data.swell_wave_direction)} (${data.swell_wave_direction}°)`
-    });
-
-    // Card 5: Swell Wave Period
-    const swellPeriodCard = createMarineCard({
-        icon: "🔄",
-        title: "Swell Period",
-        value: data.swell_wave_period,
-        unit: "s",
-        subtitle: getWavePeriodDescription(data.swell_wave_period)
-    });
-
-    // Card 6: Wind Wave Height
-    const windWaveCard = createMarineCard({
-        icon: "💨",
-        title: "Wind Wave Height",
-        value: data.wind_wave_height,
-        unit: "m",
-        subtitle: data.wind_wave_height < 0.5 ? "Low wind waves" : "Moderate wind waves"
-    });
-
-    // Card 7: Sea Surface Temperature
-    const tempCard = createMarineCard({
-        icon: "🌡️",
-        title: "Sea Temperature",
-        value: data.sea_surface_temperature,
-        unit: "°C",
-        subtitle: getTempDescription(data.sea_surface_temperature)
-    });
-
-    // Card 8: Ocean Current Velocity
-    const currentVelocityCard = createMarineCard({
-        icon: "➡️",
-        title: "Current Speed",
-        value: data.ocean_current_velocity,
-        unit: "m/s",
-        subtitle: getCurrentDescription(data.ocean_current_velocity)
-    });
-
-    // Card 9: Ocean Current Direction
-    const currentDirectionCard = createMarineCard({
-        icon: "🧭",
-        title: "Current Direction",
-        value: `${getCompassDirection(data.ocean_current_direction)}`,
-        unit: "",
-        subtitle: `${data.ocean_current_direction}°`
-    });
-
-    // Append all cards
-    container.appendChild(waveHeightCard);
-    container.appendChild(waveDirectionCard);
-    container.appendChild(wavePeriodCard);
-    container.appendChild(swellHeightCard);
-    container.appendChild(swellPeriodCard);
-    container.appendChild(windWaveCard);
-    container.appendChild(tempCard);
-    container.appendChild(currentVelocityCard);
-    container.appendChild(currentDirectionCard);
-
-    console.log("✅ Current marine cards updated");
-}
-
-/**
- * Create a marine card element
- */
-function createMarineCard({ icon, title, value, unit, subtitle, extraClass = "" }) {
-    const card = document.createElement("div");
-    card.className = `weather-card ${extraClass}`;
-
-    // Handle null/undefined values
-    const displayValue = (value === null || value === undefined) 
-        ? "N/A" 
-        : (typeof value === 'number' ? value.toFixed(2) : value);
-
-    card.innerHTML = `
-        <div class="weather-card-header">
-            <span class="weather-card-icon">${icon}</span>
-            <span class="weather-card-title">${title}</span>
-        </div>
-        <div class="weather-card-value">
-            ${displayValue}
-            ${unit && value !== null && value !== undefined ? `<span class="weather-card-unit">${unit}</span>` : ''}
-        </div>
-        ${subtitle ? `<div class="weather-card-subtitle">${subtitle}</div>` : ''}
-    `;
-
-    return card;
 }
 
 async function loadDailyMarineData() {
@@ -1667,7 +1449,7 @@ async function loadDailyMarineData() {
 
         if (response && response.data) {
             console.log("✅ Daily marine data received:", response.data);
-            
+            weatherStore.dailyMarineData = response.data
             // Update all daily marine charts
             updateMarineDailyWaveChart(response.data);
             updateMarineDailyPeriodChart(response.data);
@@ -1702,7 +1484,7 @@ async function loadHourlyMarineData() {
 
         if (response && response.data) {
             console.log("✅ Hourly marine data received:", response.data);
-            
+            weatherStore.hourlyMarineData = response.data
             // Update all hourly marine charts
             updateMarineHourlyWaveChart(response.data);
             updateMarineHourlyPeriodChart(response.data);
@@ -1737,7 +1519,7 @@ async function loadDailySatelliteData() {
 
         if (response && response.data) {
             console.log("✅ Daily satellite data received:", response.data);
-            
+            weatherStore.dailySatelliteData = response.data
             // Update all daily satellite charts
             updateSatelliteDailyRadiationChart(response.data);
             updateSatelliteDailyIrradianceChart(response.data);
@@ -1782,7 +1564,7 @@ async function loadClimateProjectionData() {
             console.log(`   Model: ${response.data.model_name}`);
             console.log(`   Period: ${response.data.start_date} to ${response.data.end_date}`);
             console.log(`   Total days: ${response.data.total_days}`);
-            
+            weatherStore.climateProjectionData = response.data
             // Update model info card
             updateClimateModelInfo(response.data);
             
@@ -1889,21 +1671,6 @@ function showClimateError(message) {
         </div>
     `;
 }
-
-/**
- * Show error message in current marine section
- */
-function showCurrentMarineError(message) {
-    const container = document.getElementById("currentMarineCards");
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="loading-spinner" style="color: #ef4444;">
-            ❌ ${message}
-        </div>
-    `;
-}
-
 
 function showCurrentAirQualityError(message) {
     const container = document.getElementById("currentAirQualityCards");

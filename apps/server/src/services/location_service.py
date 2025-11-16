@@ -181,7 +181,10 @@ class LocationService(BaseService):
                 'admin2', 'admin3', 'admin4', 'postcodes', 'feature_code',
                 'population', 'created_at', 'updated_at'
             ]
-            return dict(zip(columns, result[0]))
+            
+            data = dict(zip(columns, result[0]))
+            print(data)
+            return data
         
         return None
     

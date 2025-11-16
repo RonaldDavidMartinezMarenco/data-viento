@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.routes import auth_routes, user_routes, location_routes, weather_routes, air_quality_routes, marine_routes, satellite_radiation_route, climate_routes
-
+from src.routes import ai_routes
 
 # Create FastAPI app
 app = FastAPI(
@@ -40,6 +40,7 @@ app.include_router(air_quality_routes.router)
 app.include_router(marine_routes.router)
 app.include_router(satellite_radiation_route.router)
 app.include_router(climate_routes.router)
+app.include_router(ai_routes.router)
 
 @app.get("/")
 def root():

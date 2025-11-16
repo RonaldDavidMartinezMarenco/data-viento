@@ -64,6 +64,7 @@
                     <h3 class="sidebar-title">Weather Models</h3>
                     
                     <ul class="sidebar-menu">
+                        <!-- Overview - Dashboard Grid -->
                         <li class="sidebar-item active" data-section="overview">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7"></rect>
@@ -74,49 +75,64 @@
                             <span>Overview</span>
                         </li>
                         
+                        <!-- Weather - Sun behind cloud -->
                         <li class="sidebar-item" data-section="weather">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path>
+                                <circle cx="12" cy="12" r="4"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                             </svg>
                             <span>Weather Forecast</span>
                         </li>
                         
+                        <!-- Air Quality - Wind particles -->
                         <li class="sidebar-item" data-section="air-quality">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M8 12h8M12 8v8"></path>
+                                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
                             </svg>
                             <span>Air Quality</span>
                         </li>
                         
+                        <!-- Marine - Waves -->
                         <li class="sidebar-item" data-section="marine">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 12h18M3 6h18M3 18h18"></path>
+                                <path d="M2 12c0-2.8 2.2-5 5-5s5 2.2 5 5 2.2 5 5 5 5-2.2 5-5"></path>
+                                <path d="M2 17c0-2.2 1.8-4 4-4s4 1.8 4 4 1.8 4 4 4 4-1.8 4-4"></path>
                             </svg>
                             <span>Marine Weather</span>
                         </li>
                         
+                        <!-- Satellite - Satellite dish -->
                         <li class="sidebar-item" data-section="satellite">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                             </svg>
                             <span>Satellite Radiation</span>
                         </li>
                         
+                        <!-- Climate - Globe with temperature -->
                         <li class="sidebar-item" data-section="climate">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                             </svg>
                             <span>Climate Change</span>
                         </li>
                         
                         <li class="sidebar-divider"></li>
                         
+                        <!-- Settings - Classic gear/cog -->
                         <li class="sidebar-item" data-section="settings">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
                             </svg>
                             <span>Settings</span>
                         </li>
@@ -697,6 +713,8 @@
     <script src="/js/weather-api-client.js"></script>
     <script src="/js/weather-charts.js"></script>
     <script src="/js/settings.js"></script>
-    <script src="/js/dashboard.js"></script>
+    <script type = "module" src="/js/dashboard.js"></script>
+    <link rel="stylesheet" href="/css/chat-widget.css">
+    <script type = "module" src="/js/chat-widget.js"></script>
 </body>
 </html>

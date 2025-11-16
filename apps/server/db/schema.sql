@@ -381,6 +381,7 @@ CREATE TABLE IF NOT EXISTS weather_codes (
     is_severe BOOLEAN DEFAULT FALSE
 );
 
+-- ELIMINAR MOMENTANEO
 CREATE TABLE IF NOT EXISTS weather_code_translations (
     translation_id INT AUTO_INCREMENT PRIMARY KEY,
     code_id INT NOT NULL,
@@ -427,6 +428,8 @@ CREATE TABLE IF NOT EXISTS alert_notifications (
 );
 
 -- Systems, Queries, AI
+
+-- ELIMINAR MOMENTANEO
 CREATE TABLE IF NOT EXISTS weather_analysis (
     analysis_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -467,6 +470,7 @@ CREATE TABLE IF NOT EXISTS user_queries (
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
 
+-- ELIMINAR MOMENTANEO
 CREATE TABLE IF NOT EXISTS api_requests (
     request_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
@@ -485,7 +489,7 @@ CREATE TABLE IF NOT EXISTS api_requests (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (location_id) REFERENCES locations(location_id)
 );
-
+-- ELIMINAR MOMENTANEO
 CREATE TABLE IF NOT EXISTS system_config (
     config_id INT AUTO_INCREMENT PRIMARY KEY,
     config_key VARCHAR(100) NOT NULL UNIQUE,
@@ -497,6 +501,7 @@ CREATE TABLE IF NOT EXISTS system_config (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- ELIMINAR MOMENTANEO
 CREATE TABLE IF NOT EXISTS data_quality_metrics (
     metric_id INT AUTO_INCREMENT PRIMARY KEY,
     model_id INT NOT NULL,
