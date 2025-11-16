@@ -396,40 +396,66 @@ function applyPreferencesToUI() {
         return;
     }
     
-    // Temperature unit
-    const tempCelsius = document.getElementById('tempCelsius');
-    const tempFahrenheit = document.getElementById('tempFahrenheit');
+    // ========================================
+    // DETERMINE UNIT SYSTEM FROM BACKEND UNITS
+    // ========================================
+    const tempUnit = userPreferences.preferred_temperature_unit || 'celsius';
+    const windUnit = userPreferences.preferred_wind_speed_unit || 'kmh';
+    const precipUnit = userPreferences.preferred_precipitation_unit || 'mm';
     
-    if (userPreferences.preferred_temperature_unit === 'celsius') {
-        tempCelsius?.classList.add('active');
-        tempFahrenheit?.classList.remove('active');
+    // Check if all units are metric
+    const isMetric = (tempUnit === 'celsius' && windUnit === 'kmh' && precipUnit === 'mm');
+    
+    // Check if all units are imperial
+    const isImperial = (tempUnit === 'fahrenheit' && windUnit === 'mph' && precipUnit === 'inch');
+    
+    console.log('   Backend units:', { tempUnit, windUnit, precipUnit });
+    console.log('   Detected system:', isMetric ? 'metric' : isImperial ? 'imperial' : 'mixed');
+    
+    const metricBtn = document.getElementById('unitMetric');
+    const imperialBtn = document.getElementById('unitImperial');
+    
+    const tempDisplay = document.getElementById('tempUnitDisplay');
+    const windDisplay = document.getElementById('windUnitDisplay');
+    const precipDisplay = document.getElementById('precipUnitDisplay');
+    
+    // Apply UI based on detected system
+    if (isMetric) {
+        metricBtn?.classList.add('active');
+        imperialBtn?.classList.remove('active');
+        
+        if (tempDisplay) tempDisplay.textContent = 'Celsius (°C)';
+        if (windDisplay) windDisplay.textContent = 'km/h';
+        if (precipDisplay) precipDisplay.textContent = 'Millimeters (mm)';
+        
+        if (tempDisplay) tempDisplay.style.color = '#10b981';
+        if (windDisplay) windDisplay.style.color = '#10b981';
+        if (precipDisplay) precipDisplay.style.color = '#10b981';
+    } else if (isImperial) {
+        metricBtn?.classList.remove('active');
+        imperialBtn?.classList.add('active');
+        
+        if (tempDisplay) tempDisplay.textContent = 'Fahrenheit (°F)';
+        if (windDisplay) windDisplay.textContent = 'mph';
+        if (precipDisplay) precipDisplay.textContent = 'Inches (in)';
+        
+        if (tempDisplay) tempDisplay.style.color = '#3b82f6';
+        if (windDisplay) windDisplay.style.color = '#3b82f6';
+        if (precipDisplay) precipDisplay.style.color = '#3b82f6';
     } else {
-        tempCelsius?.classList.remove('active');
-        tempFahrenheit?.classList.add('active');
-    }
-    
-    // Wind speed unit
-    const windKmh = document.getElementById('windKmh');
-    const windMph = document.getElementById('windMph');
-    
-    if (userPreferences.preferred_wind_speed_unit === 'kmh') {
-        windKmh?.classList.add('active');
-        windMph?.classList.remove('active');
-    } else {
-        windKmh?.classList.remove('active');
-        windMph?.classList.add('active');
-    }
-    
-    // Precipitation unit
-    const precipMm = document.getElementById('precipMm');
-    const precipInch = document.getElementById('precipInch');
-    
-    if (userPreferences.preferred_precipitation_unit === 'mm') {
-        precipMm?.classList.add('active');
-        precipInch?.classList.remove('active');
-    } else {
-        precipMm?.classList.remove('active');
-        precipInch?.classList.add('active');
+        // Mixed units - show metric as default but indicate mixed
+        metricBtn?.classList.add('active');
+        imperialBtn?.classList.remove('active');
+        
+        if (tempDisplay) tempDisplay.textContent = `${tempUnit === 'celsius' ? 'Celsius (°C)' : 'Fahrenheit (°F)'}`;
+        if (windDisplay) windDisplay.textContent = `${windUnit === 'kmh' ? 'km/h' : 'mph'}`;
+        if (precipDisplay) precipDisplay.textContent = `${precipUnit === 'mm' ? 'Millimeters (mm)' : 'Inches (in)'}`;
+        
+        if (tempDisplay) tempDisplay.style.color = '#f59e0b';
+        if (windDisplay) windDisplay.style.color = '#f59e0b';
+        if (precipDisplay) precipDisplay.style.color = '#f59e0b';
+        
+        console.warn('⚠️ Mixed unit system detected');
     }
     
     // Notification toggle
@@ -438,7 +464,7 @@ function applyPreferencesToUI() {
         notificationToggle.checked = userPreferences.notification_enabled;
     }
     
-    console.log('✅ Preferences applied to UI');
+    console.log(`✅ Preferences applied to UI`);
 }
 
 // ========================================
@@ -458,26 +484,24 @@ function setupSettingsEventListeners() {
         console.log('  ✓ Add Location button');
     }
     
-    // Temperature unit toggles
-    const tempCelsius = document.getElementById('tempCelsius');
-    const tempFahrenheit = document.getElementById('tempFahrenheit');
+    const metricBtn = document.getElementById('unitMetric');
+    const imperialBtn = document.getElementById('unitImperial');
     
-    tempCelsius?.addEventListener('click', () => toggleUnit('temp', 'celsius'));
-    tempFahrenheit?.addEventListener('click', () => toggleUnit('temp', 'fahrenheit'));
+    if (metricBtn) {
+        metricBtn.addEventListener('click', () => {
+            console.log('🌍 Switching to Metric');
+            updateUnitSystemUI('metric');
+        });
+        console.log('  ✓ Metric button');
+    }
     
-    // Wind speed unit toggles
-    const windKmh = document.getElementById('windKmh');
-    const windMph = document.getElementById('windMph');
-    
-    windKmh?.addEventListener('click', () => toggleUnit('wind', 'kmh'));
-    windMph?.addEventListener('click', () => toggleUnit('wind', 'mph'));
-    
-    // Precipitation unit toggles
-    const precipMm = document.getElementById('precipMm');
-    const precipInch = document.getElementById('precipInch');
-    
-    precipMm?.addEventListener('click', () => toggleUnit('precip', 'mm'));
-    precipInch?.addEventListener('click', () => toggleUnit('precip', 'inch'));
+    if (imperialBtn) {
+        imperialBtn.addEventListener('click', () => {
+            console.log('🇺🇸 Switching to Imperial');
+            updateUnitSystemUI('imperial');
+        });
+        console.log('  ✓ Imperial button');
+    }
     
     // Save Preferences button
     const saveBtn = document.getElementById('savePreferencesBtn');
@@ -485,7 +509,7 @@ function setupSettingsEventListeners() {
         saveBtn.addEventListener('click', savePreferences);
         console.log('  ✓ Save Preferences button');
     }
-    
+
     // Notification toggle
     const notificationToggle = document.getElementById('notificationToggle');
     if (notificationToggle) {
@@ -496,30 +520,44 @@ function setupSettingsEventListeners() {
     console.log('✅ Event listeners setup complete');
 }
 
-/**
- * Toggle unit preference in UI
- */
-function toggleUnit(type, value) {
-    if (type === 'temp') {
-        const celsius = document.getElementById('tempCelsius');
-        const fahrenheit = document.getElementById('tempFahrenheit');
+function updateUnitSystemUI(system) {
+    console.log(`🔄 Updating unit system UI to: ${system}`);
+    
+    const metricBtn = document.getElementById('unitMetric');
+    const imperialBtn = document.getElementById('unitImperial');
+    
+    const tempDisplay = document.getElementById('tempUnitDisplay');
+    const windDisplay = document.getElementById('windUnitDisplay');
+    const precipDisplay = document.getElementById('precipUnitDisplay');
+    
+    // Update button states
+    if (system === 'metric') {
+        metricBtn?.classList.add('active');
+        imperialBtn?.classList.remove('active');
         
-        celsius?.classList.toggle('active', value === 'celsius');
-        fahrenheit?.classList.toggle('active', value === 'fahrenheit');
-    } else if (type === 'wind') {
-        const kmh = document.getElementById('windKmh');
-        const mph = document.getElementById('windMph');
+        if (tempDisplay) tempDisplay.textContent = 'Celsius (°C)';
+        if (windDisplay) windDisplay.textContent = 'km/h';
+        if (precipDisplay) precipDisplay.textContent = 'Millimeters (mm)';
         
-        kmh?.classList.toggle('active', value === 'kmh');
-        mph?.classList.toggle('active', value === 'mph');
-    } else if (type === 'precip') {
-        const mm = document.getElementById('precipMm');
-        const inch = document.getElementById('precipInch');
+        if (tempDisplay) tempDisplay.style.color = '#10b981';
+        if (windDisplay) windDisplay.style.color = '#10b981';
+        if (precipDisplay) precipDisplay.style.color = '#10b981';
+    } else {
+        metricBtn?.classList.remove('active');
+        imperialBtn?.classList.add('active');
         
-        mm?.classList.toggle('active', value === 'mm');
-        inch?.classList.toggle('active', value === 'inch');
+        if (tempDisplay) tempDisplay.textContent = 'Fahrenheit (°F)';
+        if (windDisplay) windDisplay.textContent = 'mph';
+        if (precipDisplay) precipDisplay.textContent = 'Inches (in)';
+        
+        if (tempDisplay) tempDisplay.style.color = '#3b82f6';
+        if (windDisplay) windDisplay.style.color = '#3b82f6';
+        if (precipDisplay) precipDisplay.style.color = '#3b82f6';
     }
+    
+    console.log(`✅ Unit system UI updated to: ${system}`);
 }
+
 
 // ========================================
 // STEP 7: SAVE PREFERENCES
@@ -540,15 +578,33 @@ async function savePreferences() {
             throw new Error('No access token available');
         }
         
-        // Get current UI values
-        const tempUnit = document.getElementById('tempCelsius')?.classList.contains('active') 
-            ? 'celsius' : 'fahrenheit';
-        const windUnit = document.getElementById('windKmh')?.classList.contains('active') 
-            ? 'kmh' : 'mph';
-        const precipUnit = document.getElementById('precipMm')?.classList.contains('active') 
-            ? 'mm' : 'inch';
+        // ========================================
+        // DETERMINE UNIT SYSTEM FROM UI
+        // ========================================
+        const metricBtn = document.getElementById('unitMetric');
+        const isMetric = metricBtn?.classList.contains('active');
+        
+        // ========================================
+        // SET INDIVIDUAL UNITS BASED ON SYSTEM
+        // ========================================
+        let tempUnit, windUnit, precipUnit;
+        
+        if (isMetric) {
+            tempUnit = 'celsius';
+            windUnit = 'kmh';
+            precipUnit = 'mm';
+        } else {
+            tempUnit = 'fahrenheit';
+            windUnit = 'mph';
+            precipUnit = 'inch';
+        }
+        
+        // Get notification preference
         const notificationEnabled = document.getElementById('notificationToggle')?.checked || false;
         
+        // ========================================
+        // BUILD PREFERENCES OBJECT
+        // ========================================
         const preferences = {
             preferred_temperature_unit: tempUnit,
             preferred_wind_speed_unit: windUnit,
@@ -556,7 +612,8 @@ async function savePreferences() {
             notification_enabled: notificationEnabled
         };
         
-        console.log('   Saving:', preferences);
+        console.log('   Unit System:', isMetric ? 'Metric' : 'Imperial');
+        console.log('   Sending to backend:', preferences);
         
         const apiUrl = getApiUrl('/users/me/preferences');
         
@@ -575,15 +632,21 @@ async function savePreferences() {
         }
         
         userPreferences = await response.json();
-        console.log('✅ Preferences saved:', userPreferences);
+        console.log('✅ Preferences saved to backend:', userPreferences);
         
-        alert('Preferences saved successfully!');
+        // Show success message with details
+        const unitLabel = isMetric 
+            ? 'Metric (°C, km/h, mm)' 
+            : 'Imperial (°F, mph, in)';
+        
+        alert(`✅ Unit system saved: ${unitLabel}`);
         
     } catch (error) {
         console.error('❌ Error saving preferences:', error);
         alert(`Failed to save preferences: ${error.message}`);
     }
 }
+
 
 // ========================================
 // INITIALIZE SETTINGS

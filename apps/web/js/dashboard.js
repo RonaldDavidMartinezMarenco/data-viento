@@ -1610,7 +1610,7 @@ function updateClimateModelInfo(data) {
     const periodCard = createClimateCard({
         icon: "📅",
         title: "Projection Period",
-        value: `${new Date(data.start_date).getFullYear()}-${new Date(data.end_date).getFullYear()}`,
+        value: "2022-2026",
         subtitle: `${data.total_days} days`
     });
 

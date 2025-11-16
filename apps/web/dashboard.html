@@ -626,49 +626,49 @@
                     
                     <!-- Unit Preferences -->
                     <div class="settings-group">
-                        <h4>📏 Unit Preferences</h4>
+                        <h4>📏 Unit System</h4>
                         <p class="settings-description">
-                            Choose your preferred units for displaying weather data.
+                            Choose your preferred unit system. Imperial automatically uses Fahrenheit, mph, and inches.
                         </p>
                         
+                        <!-- Unit System Selector (Main) -->
                         <div class="form-group">
-                            <label>Temperature Unit:</label>
+                            <label>Unit System:</label>
                             <div class="toggle-group">
-                                <button id="tempCelsius" class="toggle-btn active">
-                                    Celsius (°C)
+                                <button id="unitMetric" class="toggle-btn active" data-system="metric">
+                                    🌍 Metric
                                 </button>
-                                <button id="tempFahrenheit" class="toggle-btn">
-                                    Fahrenheit (°F)
+                                <button id="unitImperial" class="toggle-btn" data-system="imperial">
+                                    🇺🇸 Imperial
                                 </button>
                             </div>
+                            <small style="color: #718096; font-size: 0.85rem; margin-top: 8px; display: block;">
+                                Metric: °C, km/h, mm | Imperial: °F, mph, inches
+                            </small>
                         </div>
                         
-                        <div class="form-group">
-                            <label>Wind Speed Unit:</label>
-                            <div class="toggle-group">
-                                <button id="windKmh" class="toggle-btn active">
-                                    km/h
-                                </button>
-                                <button id="windMph" class="toggle-btn">
-                                    mph
-                                </button>
+                        <!-- Individual Unit Preferences (Auto-set based on system) -->
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label>Individual Units (auto-configured):</label>
+                            
+                            <div style="margin-top: 10px;">
+                                <strong>Temperature:</strong>
+                                <span id="tempUnitDisplay" style="margin-left: 10px; color: #10b981;">Celsius (°C)</span>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Precipitation Unit:</label>
-                            <div class="toggle-group">
-                                <button id="precipMm" class="toggle-btn active">
-                                    Millimeters (mm)
-                                </button>
-                                <button id="precipInch" class="toggle-btn">
-                                    Inches (in)
-                                </button>
+                            
+                            <div style="margin-top: 8px;">
+                                <strong>Wind Speed:</strong>
+                                <span id="windUnitDisplay" style="margin-left: 10px; color: #10b981;">km/h</span>
+                            </div>
+                            
+                            <div style="margin-top: 8px;">
+                                <strong>Precipitation:</strong>
+                                <span id="precipUnitDisplay" style="margin-left: 10px; color: #10b981;">Millimeters (mm)</span>
                             </div>
                         </div>
                         
                         <button id="savePreferencesBtn" class="btn btn-primary" style="margin-top: 15px;">
-                            💾 Save Preferences
+                            💾 Save Unit Preferences
                         </button>
                     </div>
                     
