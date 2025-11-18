@@ -28,7 +28,7 @@ Implement AI models to translate complex indicators into intuitive visualization
 Provide interactive tools and recommendations to improve user resilience.
 
 ## Technologies Used
-**Frontend**: HTML, CSS, JavaScript (for the interface and visualizations).
+**Frontend**: HTML, CSS, JavaScript, Chart.js (for the interface and visualizations).
 
 **Backend**: Python, FastAPI
 
@@ -52,3 +52,8 @@ docker-compose build
 docker-compose up -d
 
 ### 3. **Look at the apps/server/.env.example** Create a .env with the same structure and with your data.
+
+
+## Use the project online
+
+[DataViento](https://dataviento.voltr.org/)
