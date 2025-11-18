@@ -45,24 +45,10 @@ This document is a work in progress and will be updated as the project evolves.
 
 Follow these three steps to get your development environment ready.
 
-### 1. MySQL Database Configuration
+### 1. Build Docker Images
+docker-compose build
 
-You must create the database and load the table schema before starting the server.
+### 2. Execute docker on detached mode
+docker-compose up -d
 
-**Please replace `[YOUR_MYSQL_USER]` with your actual MySQL username.**
-
-#### A. Creation and Schema Loading
-
-1.  **Connect and Create DB:** Open your terminal and connect to MySQL to create the database:
-    ```bash
-    mysql -u [YOUR_MYSQL_USER] -p
-    # Inside MySQL:
-    CREATE DATABASE data_viento_database;
-    exit;
-    ```
-
-2.  **Load the Schema:** Load the table structure from the `schema.txt` file (execute this command from the project's root directory):
-    ```bash
-    mysql -u [YOUR_MYSQL_USER] -p data_viento_database < apps/server/src/db/schema.txt
-    ```
-3. **Look at the apps/server/.env.example** Create a .env with the same structure and with your data.
+### 3. **Look at the apps/server/.env.example** Create a .env with the same structure and with your data.
